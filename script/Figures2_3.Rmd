@@ -1,0 +1,293 @@
+---
+title: "Figures 2 and 3 for Reassessing prehistoric fish consumption
+author: "OEC"
+date: "26/04/2023"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+#1Load packages and colour pallette
+
+```{r, echo=FALSE}
+library(dplyr)
+library(ggplot2)
+library(data.table)
+library(tidyr)
+library(stringr)
+library(Hmisc)
+library(ggpubr)
+library(googlesheets4)
+library(here)
+```
+
+
+#2 Load data 
+
+
+```{r}
+Data  <-  read.csv(here('data','SambaquisAA.csv'))
+humans <-filter(data, group == "Human")
+fauna <-filter(data, group == "Fauna")
+```
+
+#3. Create indices for plot 
+
+```{r}
+
+fauna <-fauna %>% rowwise() %>% mutate(valphe_13C = (c(val_d13C - phe_d13C)))
+fauna <-fauna %>% rowwise() %>% mutate(lysphe_15N = (c(lys_d15N - phe_d15N)))
+fauna <-fauna %>% rowwise() %>% mutate(gluphe_15N = (c(glu_d15N - phe_d15N)))
+humans <-humans %>% rowwise() %>% mutate(valphe_13C = (c(val_d13C - phe_d13C)))
+humans <-humans %>% rowwise() %>% mutate(lysphe_15N = (c(lys_d15N - phe_d15N)))
+humans <-humans %>% rowwise() %>% mutate(gluphe_15N = (c(glu_d15N - phe_d15N)))
+```
+
+#4. Create a colour pallette
+Create a colour pallette
+
+```{r}
+cols <- c("Jabuticabeira II" = "#56B4E9", "Moraes" = "#009E73", "Piaçaguera" = "#E69F00", "Morro do Ouro" = "#F0E442", "terrestrial_herbivore" = "#999933","terrestrial_omnivore" = "#CC79A7", "marine_fauna" = "#0072B2")
+
+order <- c("Jabuticabeira II", "Moraes", "Piaçaguera", "Morro do Ouro", "terrestrial_herbivore","terrestrial_omnivore", "marine_fauna")
+
+order <- c("Jabuticabeira II", "Moraes", "Piaçaguera", "Morro do Ouro")
+
+cols1 <- c("Jabuticabeira II" = "#56B4E9", "Moraes" = "#009E73", "Piaçaguera" = "#E69F00", "Morro do Ouro" = "#F0E442", "Freshwater" = "#999999", "Marine" = "#0072B2", "C3 Fauna" = "#000000", "C3 Humans" = "#D55E00", "C4_humans" = "#CC79A7") 
+          
+order1 <- c("Jabuticabeira II","Morro do Ouro", "Piaçaguera", "Moraes", "Piaçaguera","Morro do Ouro", "Freshwater", "Marine", "C3 Fauna", "C3 Humans", "C4_humans") 
+```
+
+#5 Faunal baseline
+
+#Fig2a Bulk isotope values of fauna 
+
+```{r}
+#Creates a template for collagen15N against collagen13C
+library(ggrepel)
+Fig2a <-ggplot()+
+  labs(y=expression(delta^{15}*N[collagen]*"(\u2030)"), x=expression(delta^{13}*C[collagen]*"(\u2030)"))+
+  scale_x_continuous(position="bottom", limits=c(-25,-5))+
+  scale_y_continuous(position = "left", limits=c(0,20))+
+ geom_point(data=fauna, aes(y=d15N, x=d13C, fill=category), colour="black", pch=23, alpha=0.6, size=4)+
+  geom_text_repel(data=fauna, aes(y=d15N, x=d13C, label=common_name), size=2.5)+ 
+  scale_fill_manual(values=c(cols), breaks=c(order))+
+    theme_bw()+
+  coord_fixed(ratio = 1)
+Fig2a
+ggsave(here('figures','Fig2a.svg'), width = 8.9, height = 8.9, dpi = 300, units = "cm", device='svg')
+```
+
+
+#Fig2b d15N_Glu against d15N_Phe for fauna
+
+```{r}
+  Fig2b <-ggplot() +
+  labs(x=expression(delta^{15}*N[Phe]*"(\u2030)"), y=expression(delta^{15}*N[Glu]*"(\u2030)"))+
+  scale_x_continuous(position="bottom", limits=c(0,20))+
+  scale_y_continuous(position = "left",limits=c(0,40))+
+  geom_point(data=fauna, aes(y=glu_d15N, x=phe_d15N, fill = category), 
+  colour ="black", pch=23, alpha=0.6, size=4)+
+  geom_text_repel(data=fauna, aes(y=glu_d15N, x=phe_d15N, label=common_name),size=2.5)+ 
+  annotate("text", label = "T1", x = 7 , y = 0, size = 3, colour = "black",angle = 25)+
+  annotate("text", label = "T2", x = 0 , y = 0, size = 3, colour = "black",angle = 25)+
+  annotate("text", label = "T3", x = 0 , y = 6, size = 3, colour = "black",angle = 25)+
+  annotate("text", label = "M2", x = 0 , y = 10.2, size = 3, colour = "Blue",angle = 25)+
+  annotate("text", label = "M3", x = 0 , y = 17.3, size = 3, colour = "Blue",angle = 25)+
+  annotate("text", label = "M4", x = 0 , y = 24.5, size = 3, colour = "Blue",angle = 25)+
+  scale_fill_manual(values=c(cols), breaks=c(order))+
+  guides(fill=guide_legend(title="Samples"))+
+  geom_abline(intercept=c(-6.6, 1, 8.6, 10.9, 18.5, 26.1), slope= 1, linetype="dashed", size=0.2)+#Ramirez et al. values 
+    theme_bw()+
+coord_fixed(ratio = 0.5)
+Fig2b
+ggsave(here('figures','Fig2b.svg'), width = 8.9, height = 8.9, dpi = 300, units = "cm", device='svg')
+```
+
+#Fig2c d15NGlu_Phe against d13CVal-Phe for fauna
+
+```{r}
+Fig2c <-ggplot() +
+  geom_point(data=fauna, aes(y=gluphe_d15N,  x=valphe_d13C, fill=category), colour="black", pch=23,alpha=0.6, size=4)+
+  geom_text_repel(data=fauna, aes(y=gluphe_15N, x=valphe_13C, label=common_name),size=2.5)+
+  labs(y=expression(Delta^{15}*N[Glx-Phe]*"(\u2030)"), x=expression(Delta^{13}*C[Val-Phe]*"(\u2030)"))+
+  scale_fill_manual(values=c(cols), breaks=c(order))+
+  scale_x_continuous(position="bottom", limits=c(-5,8))+
+  scale_y_continuous(position = "left",limits=c(-5,30))+
+  theme_bw()+
+  coord_fixed(ratio = 0.37)
+Fig2c
+ggsave(here('figures','Fig2c.svg'), width = 8.9, height = 8.9, dpi = 300, units = "cm", device='svg')
+```
+
+
+#Fig2d faunal remains fingerprinting
+Define refernce ranges from primary producer databases
+
+```{r}
+Ref_C <-  read.csv(here('data','C_fingerprinting.csv'))
+Ref_N <-  read.csv(here('data','N_fingerprinting.csv'))
+#select EAA
+Ref_C <- Ref_C %>%  dplyr::select(Group, Category, ile_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)
+Ref_C <-Ref_C %>% rowwise() %>% mutate(valphe_13C = (c(val_d13C - phe_d13C)))
+Ref_C <- Ref_C %>% dplyr::filter(Category == 'C3_terrestrial_plant' | Category == 'phytoplankton' |Category == 'green algae' |Category == 'brown algae' |Category == 'red algae' )
+Ref_C <- na.omit(Ref_C) 
+
+
+Ref_N <- Ref_N %>%  dplyr::select(Group, Category, phe_d15N, lys_d15N)
+Ref_N <-Ref_N %>% rowwise() %>% mutate(lysphe_15N = (c(lys_d15N - phe_d15N)))
+Ref_N <- Ref_N %>% dplyr::filter(Category == 'C3_terrestrial_plant' | Category == 'phytoplankton' |Category == 'green algae' |Category == 'brown algae')
+Ref_N <- na.omit(Ref_N) #
+```
+```{r}
+group_colors <- c('Bacteria' = "darkred", 'Macroalgae' = "darkblue", 'Microalgae' = 'darkorange','C3_terrestrial_plant' = "darkgreen", 'Funghi' = "#7E6148FF")
+
+cat_colors <- c('red algae' = "darkred", 'brown algae' = '#7E6148FF', 'green algae' = "green", 'C3_terrestrial_plant' = "darkgreen", 'phytoplankton' = "darkblue")
+```
+
+
+Make base plot
+
+```{r}
+Fig2d_base <-ggplot() +
+  geom_point(data=fauna, aes(y=lysphe_15N,  x=valphe_13C, fill=category), colour="black", pch=23,alpha=0.6, size=4)+
+  geom_text_repel(data=fauna, aes(y=lysphe_15N, x=valphe_13C, label=common_name),size=2.5)+
+  labs(y=expression(Delta^{15}*N[Lys-Phe]*"(\u2030)"), x=expression(Delta^{13}*C[Val-Phe]*"(\u2030)"))+
+   scale_fill_manual(values=c(cols), breaks=c(order))+
+  scale_x_continuous(position="bottom", limits=c(-5,8))+
+  scale_y_continuous(position = "left",limits=c(-10,5))+
+  theme_bw()+
+  coord_fixed(ratio = 0.87)
+Fig2d_base
+```
+
+#Make a bigD plot
+
+```{r}
+library (ggExtra)
+library(ggpubr)
+library(cowplot)
+# Generate grouped 
+# Marginal densities along x axis
+xdens <- axis_canvas(Fig2d_base, axis = "x") +
+  geom_density(data= Ref_C, aes(x = valphe_13C, fill = Category), alpha = 0.5, size = 0.2) +
+  scale_fill_manual(values = cat_colors) 
+ydens <- axis_canvas(Fig2d_base, axis = "y", coord_flip = TRUE)+  geom_density(data = Ref_N, aes(x = lysphe_15N, fill = Category),alpha = 0.5, size = 0.2) +  
+  coord_flip() +
+  scale_fill_manual(values = cat_colors) 
+Fig2d <- insert_xaxis_grob(Fig2d_base, xdens, grid::unit(.2, "null"), position = "top")
+Fig2d <- insert_yaxis_grob(Fig2d, ydens, grid::unit(.2, "null"), position = "right")
+Fig2d <-ggdraw(Fig2d)
+Fig2d
+ggsave(here('figures','Fig2d.svg'), width = 8.9, height = 8.9, dpi = 300, units = "cm", device='svg')
+```
+
+
+#Save Fig 2
+```{r}
+library(ggpubr)
+Fig2 <- ggarrange(Fig2a, Fig2b, Fig2c, Fig2d,
+                    labels = c("A", "B","C", "D"),
+                    ncol = 2, nrow = 2, widths = c(2, 2), legend="bottom", common.legend = TRUE)
+Fig2
+ggsave(here('figures','Fig2.svg'), width = 17.8, height = 17.8, dpi = 300, units = "cm", device='svg')
+```
+
+#6. Human isotope values 
+
+#Fig3a. Bulk isotope values of humans 
+```{r}
+Fig3a <-ggplot()+
+  labs(y=expression(delta^{15}*N[collagen]*"(\u2030)"), x=expression(delta^{13}*C[collagen]*"(\u2030)"))+
+  scale_x_continuous(position="bottom", limits=c(-25,-5))+
+  scale_y_continuous(position = "left", limits=c(0,20))+
+  geom_point(data=fauna, aes(y=d15N, x=d13C, colour=category), alpha=0.8, pch=23, size=4)+
+  geom_point(data=humans, aes(y=d15N, x=d13C, fill=Site), colour="black", pch=21, size=4)+
+   scale_fill_manual(values=c(cols), breaks=c(order))+
+  scale_colour_manual(values=c(cols), breaks=c(order))+
+  theme_bw()+
+  coord_fixed(ratio = 1)
+ggsave(here('figures','Fig3a.svg'), width = 8.9, height = 8.9, dpi = 300, units = "cm", device='svg')
+Fig3a
+```
+
+
+#3b d15N Glu against d15N Phe for humans
+
+```{r}
+  Fig3b <-ggplot() +
+  labs(x=expression(delta^{15}*N[Phe]*"(\u2030)"), y=expression(delta^{15}*N[Glx]*"(\u2030)"))+
+  scale_x_continuous(position="bottom", limits=c(0,20))+
+  scale_y_continuous(position = "left",limits=c(0,40))+
+  geom_point(data=fauna, aes(y=glu_d15N, x=phe_d15N, colour=category), alpha=0.8, pch=23, size=4)+
+  geom_point(data=humans, aes(y=glu_d15N, x=phe_d15N, fill = Site), colour ="black", pch=21, size=3.5)+
+  annotate("text", label = "T1", x = 7 , y = 0, size = 3, colour = "black",angle = 25)+
+  annotate("text", label = "T2", x = 0 , y = 0, size = 3, colour = "black",angle = 25)+
+  annotate("text", label = "T3", x = 0 , y = 6, size = 3, colour = "black",angle = 25)+
+  annotate("text", label = "M2", x = 0 , y = 10.2, size = 3, colour = "Blue",angle = 25)+
+  annotate("text", label = "M3", x = 0 , y = 17.3, size = 3, colour = "Blue",angle = 25)+
+  annotate("text", label = "M4", x = 0 , y = 24.5, size = 3, colour = "Blue",angle = 25)+
+  scale_fill_manual(values=c(cols), breaks=c(order))+
+  scale_colour_manual(values=c(cols), breaks=c(order))+
+  guides(fill=guide_legend(title="Samples"))+
+  geom_abline(intercept=c(-6.6, 1, 8.6, 10.9, 18.5, 26.1), slope= 1, linetype="dashed", size=0.2)+#Ramirez et al. values 
+  theme_bw()+
+coord_fixed(ratio = 0.5)
+ggsave(here('figures','Fig3b.svg'), width = 8.9, height = 8.9, dpi = 300, units = "cm", device='svg')
+Fig3b
+```
+Fig3c - Glxphe agains valphe humans
+
+```{r}
+Fig3c <-ggplot() +
+  geom_point(data=fauna, aes(y=gluphe_15N,  x=valphe_13C, colour=category), alpha=0.8, pch=23, size=4)+
+  geom_point(data=humans, aes(y=gluphe_15N,  x=valphe_13C, fill=Site), colour="black", pch=21, size=4)+
+  labs(y=expression(Delta^{15}*N[Glx-Phe]*"(\u2030)"), x=expression(Delta^{13}*C[Val-Phe]*"(\u2030)"))+
+  scale_fill_manual(values=c(cols), breaks=c(order))+
+  scale_colour_manual(values=c(cols), breaks=c(order))+
+  scale_x_continuous(position="bottom", limits=c(-5,8))+
+  scale_y_continuous(position = "left",limits=c(-5,30))+
+  theme_bw()+
+  coord_fixed(ratio = 0.37)+
+  theme_bw()
+ggsave(here('figures','Fig3c.svg'), width = 8.9, height = 8.9, dpi = 300, units = "cm", device='svg')
+Fig3c
+```
+
+#Fig3d faunal remains 'fingerprinting'
+
+```{r}
+Fig3d <-ggplot() +
+  geom_point(data=fauna, aes(y=lysphe_d15N,  x=valphe_d13C, colour=category), alpha=0.8, pch=23, size=4)+
+  geom_point(data=humans, aes(y=lysphe_d15N,  x=valphe_d13C, fill=Site), colour="black", pch=21, size=4)+
+  labs(y=expression(Delta^{15}*N[Lys-Phe]*"(\u2030)"), x=expression(Delta^{13}*C[Val-Phe]*"(\u2030)"))+
+ scale_fill_manual(values=c(cols), breaks=c(order))+
+  scale_colour_manual(values=c(cols), breaks=c(order))+
+  scale_x_continuous(position="bottom", limits=c(-5,8))+
+  scale_y_continuous(position = "left",limits=c(-10,5))+
+  theme_bw()+
+  theme(legend.position = "none")+
+  coord_fixed(ratio = 0.87)
+Fig3d <- insert_xaxis_grob(Fig3d, xdens, grid::unit(.2, "null"), position = "top")
+Fig3d <- insert_yaxis_grob(Fig3d, ydens, grid::unit(.2, "null"), position = "right")
+Fig3d <-ggdraw(Fig3d)
+ggsave(here('figures','Fig3d.svg'), width = 8.9, height = 8.9, dpi = 300, units = "cm", device='svg')
+Fig3d
+```
+
+
+#Save Fig 3 
+```{r}
+library(ggpubr)
+Fig3 <- ggarrange(Fig3a, Fig3b, Fig3c, Fig3d,
+                    labels = c("A", "B","C", "D"),
+                    ncol = 2, nrow = 2, widths = c(2, 2), legend="bottom", common.legend = TRUE)
+Fig3
+ggsave(here('figures','Fig3.svg'), width = 17.8, height = 17.8, dpi = 300, units = "cm", device='svg')
+```
+
+
+
+
+
+

@@ -1,0 +1,29 @@
+"Site","Region","Sample_ID","category","common_name","group","Group","d34S","d13C","d15N","ile_d13C","leu_d13C","lys_d13C","val_d13C","phe_d13C","phe_d15N","lys_d15N"
+"Jabuticabeira II","Laguna","JAB14","human","human","Human","Jabuticabeira II_human",12.2,-11.3,18.4,-14.91,-24.37,-19.64,-16.18,-21.77,7.3,9.4
+"Jabuticabeira II","Laguna","JAB16","human","human","Human","Jabuticabeira II_human",11.6,-11.4,17.5,-15.03,-23.82,-14.34,-16.2,-21.87,8.87,7.99
+"Jabuticabeira II","Laguna","JAB28","human","human","Human","Jabuticabeira II_human",12.1,-10.8,18.3,-11.71,-21.66,-12.27,-13.14,-20.06,8.88,8.79
+"Jabuticabeira II","Laguna","JAB48","human","human","Human","Jabuticabeira II_human",12.4,-11.1,18.3,-13.22,-23.4,-15.11,-16.78,-21.32,9,10.2
+"Jabuticabeira II","Laguna","JAB57","human","human","Human","Jabuticabeira II_human",12.5,-11.5,17.8,-14.64,-24.47,-14.64,-16.37,-22.01,8.7,8.72
+"Moraes","Vale do Ribeira","MRS11","human","human","Human","Moraes_human",11.7,-21.2,11.3,-23.36,-31.32,-23.53,-28.22,-28.31,9.04,4.082
+"Moraes","Vale do Ribeira","MRS2","human","human","Human","Moraes_human",11.8,-20.8,11.1,-23.9,-33.93,-23.93,-26.84,-27.94,9.01,3.22
+"Moraes","Vale do Ribeira","MRS5","human","human","Human","Moraes_human",11.7,-20.6,10.9,-23.39,-33.04,-23.66,-26.14,-27.54,9.47,4.75
+"Moraes","Vale do Ribeira","MRS6","human","human","Human","Moraes_human",11.4,-20.8,11.4,-24.12,-33.72,-25.89,-27.61,-28.77,8.8,5.1
+"Piacaguera","Baixada santista","PG02","human","human","Human","Piacaguera_human",0.4,-15.7,13.4,-18.22,-28.06,-17.91,-21.43,-23.57,10.36,4.43
+"Piacaguera","Baixada santista","PG03","human","human","Human","Piacaguera_human",2.4,-15.7,13.9,-16.84,-27.06,-15.39,-19.78,-22.65,9.96,5.5
+"Piacaguera","Baixada santista","PG08","human","human","Human","Piacaguera_human",0.8,-16.7,13.3,-17.6,-26.83,-17.5,-22.31,-23.96,10.54,4.93
+"Piacaguera","Baixada santista","PG09","human","human","Human","Piacaguera_human",-0.2,-16.5,12.6,-17.43,-27.28,-17.96,-20.7,-23.52,8.8,4.9
+"Piacaguera","Baixada santista","PG10","human","human","Human","Piacaguera_human",3.3,-15.6,14.6,-15.24,-29.85,-17.43,-20.31,-24.5,9.1,5.56
+"Piacaguera","Baixada santista","PG11","human","human","Human","Piacaguera_human",0.7,-15.2,13.8,-14.99,-24.8,-16.45,-20.02,-22.3,10.41,5.22
+"Piacaguera","Baixada santista","PG18","human","human","Human","Piacaguera_human",3.5,-15.5,14.3,-16.38,-24.91,-16.97,-20.25,-24.14,10.72,5.3
+"Piacaguera","Baixada santista","PG19","human","human","Human","Piacaguera_human",0.8,-15.5,13.9,-17.55,-26.89,-19.32,-20.79,-23.11,8.7,5.9
+"Piacaguera","Baixada santista","PG26","human","human","Human","Piacaguera_human",5.3,-13,16.2,-14.64,-25.33,-14.92,-17.39,-22.15,9.91,5.67
+"Morro do Ouro","Babitonga Bay","NGeo 1","human","human","Human","Md'Ouro_human",10,-14.1,13,-13.83,-21.88,-13.65,-18.87,-21.59,6.36,5.43
+"Morro do Ouro","Babitonga Bay","NGeo 2","human","human","Human","Md'Ouro_human",9,-13.5,13.2,-15.46,-23.38,-14.75,-18.65,-21.99,4.62,5.21
+"Morro do Ouro","Babitonga Bay","NGeo 3","human","human","Human","Md'Ouro_human",11.1,-13.3,13.6,-15.53,-24.29,-13.16,-16.56,-21.36,5.37,5.39
+"Morro do Ouro","Babitonga Bay","NGeo 4","human","human","Human","Md'Ouro_human",9.8,-11,13.5,-13.78,-22.19,-11.67,-13.91,-19.56,3.96,3.89
+"Morro do Ouro","Babitonga Bay","NGeo 5","human","human","Human","Md'Ouro_human",8,-19.9,9.5,-23.5,-31.56,-20.91,-23.96,-26.36,6.62,2.27
+"Morro do Ouro","Babitonga Bay","NGeo 6","human","human","Human","Md'Ouro_human",9.1,-11.7,13.1,-15.07,-21.47,-12.46,-17.18,-20.73,5.81,4.56
+"Morro do Ouro","Babitonga Bay","NGeo 7","human","human","Human","Md'Ouro_human",10.7,-12.8,15.4,-13.88,-20.48,-14.49,-17.83,-21.24,6.71,6.7
+"Morro do Ouro","Babitonga Bay","NGeo 8","human","human","Human","Md'Ouro_human",10.8,-13.5,12.7,-15.52,-23.46,-13.48,-18.97,-22.25,5.62,5.19
+"Morro do Ouro","Babitonga Bay","NGeo 9","human","human","Human","Md'Ouro_human",10.5,-12.5,14,-14.79,-23.21,-12.22,-16.27,-20.84,5.82,8.5
+"Morro do Ouro","Babitonga Bay","NGeo 10","human","human","Human","Md'Ouro_human",9.8,-13.4,14.2,-14.51,-21.29,-14.27,-18.38,-22.1,5.69,5.63
