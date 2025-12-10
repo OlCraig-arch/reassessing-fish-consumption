@@ -26,9 +26,9 @@ library(here)
 
 
 ```{r}
-Data  <-  read.csv(here('data','SambaquisAA.csv'))
-humans <-filter(data, group == "Human")
-fauna <-filter(data, group == "Fauna")
+Data  <- read.csv(here('data','SambaquisAA.csv'))
+humans <- filter(Data, group == "Human")
+fauna <- filter(Data, group == "Fauna")
 ```
 
 #3. Create indices for plot 
@@ -108,7 +108,7 @@ ggsave(here('figures','Fig2b.svg'), width = 8.9, height = 8.9, dpi = 300, units 
 
 ```{r}
 Fig2c <-ggplot() +
-  geom_point(data=fauna, aes(y=gluphe_d15N,  x=valphe_d13C, fill=category), colour="black", pch=23,alpha=0.6, size=4)+
+  geom_point(data=fauna, aes(y=gluphe_15N,  x=valphe_13C, fill=category), colour="black", pch=23,alpha=0.6, size=4)+
   geom_text_repel(data=fauna, aes(y=gluphe_15N, x=valphe_13C, label=common_name),size=2.5)+
   labs(y=expression(Delta^{15}*N[Glx-Phe]*"(\u2030)"), x=expression(Delta^{13}*C[Val-Phe]*"(\u2030)"))+
   scale_fill_manual(values=c(cols), breaks=c(order))+
@@ -188,7 +188,7 @@ ggsave(here('figures','Fig2d.svg'), width = 8.9, height = 8.9, dpi = 300, units 
 library(ggpubr)
 Fig2 <- ggarrange(Fig2a, Fig2b, Fig2c, Fig2d,
                     labels = c("A", "B","C", "D"),
-                    ncol = 2, nrow = 2, widths = c(2, 2), legend="bottom", common.legend = TRUE)
+                    ncol = 2, nrow = 2, widths = c(2, 2), legend="none")
 Fig2
 ggsave(here('figures','Fig2.svg'), width = 17.8, height = 17.8, dpi = 300, units = "cm", device='svg')
 ```
