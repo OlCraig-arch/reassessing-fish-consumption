@@ -1,0 +1,385 @@
+---
+title: "Figures 4_5 for Reassessing prehistoric fish consumption article"
+author: "OEC"
+date: "2024-12-30"
+output: html_document
+---
+
+#1. Load basic packages
+
+```{r, echo=FALSE}
+library(dplyr)
+library(ggplot2)
+library(data.table)
+library(tidyr)
+library(stringr)
+library(Hmisc)
+library(ggpubr)
+library(googlesheets4)
+library (devtools)
+library(here)
+```
+
+#2. Load Sambaqui data and select AAs for model (EAA)
+
+```{r}
+Data  <-  read.csv(here('data','SambaquisAA.csv'))
+EAA <- Data %>%  dplyr::select(Site, Region, Sample_ID, category, common_name, group, Group, d34S,d13C,d15N, ile_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C, phe_d15N, lys_d15N)
+```
+
+#3. Create a source data file for marine and terrestrial faunal references and find mean and SDs - note this is needed for multiple tracers rather than a 'raw' model.
+
+
+```{r}
+Sources <- EAA %>% subset(group =="Fauna")
+Sources <- Sources %>%filter(!common_name == "guinea pig" & !common_name == "armadillo"& !common_name == "coati")
+
+Source_means <- Sources %>% group_by(Group) %>% summarise (Meanile_d13C
+ = mean(ile_d13C), Meanleu_d13C  = mean(leu_d13C), Meanlys_d13C
+ = mean(lys_d13C), Meanval_d13C = mean(val_d13C), Meanphe_d13C = mean(phe_d13C), Meanphe_d15N = mean(phe_d15N), Meanlys_d15N = mean(lys_d15N), SDile_d13C = sd(ile_d13C), SDleu_d13C  = sd(leu_d13C), SDlys_d13C = sd(lys_d13C), SDval_d13C = sd(val_d13C), SDphe_d13C = sd(phe_d13C), SDphe_d15N = mean(phe_d13C), SDlys_d15N = mean(lys_d15N), n = n())
+
+write.csv (Source_means, here::here("mixingmodel", "Sources.csv"), row.names=FALSE)
+```
+
+```{r}
+Discr <- data.frame(
+  Source = c("marine_fauna", "terrestrial_fauna"),
+  Meanile_d13C = c(-0.7,-0.7),	
+  Meanleu_d13C	=c(-0.3,-0.3),
+  Meanlys_d13C = c(0,0),#No data available	
+  Meanval_d13C	=c (-0.1,-0.1),
+  Meanphe_d13C = c(0,0),
+  Meanphe_d15N = c(0.1,0.1),	
+  Meanlys_d15N	=c (0.8,0.8),
+  SDile_d13C	= c(1.5,1.5),
+  SDleu_d13C = c(0.8,0.8),
+  SDlys_d13C	= c(0,0),#No data available	
+  SDval_d13C = c(1.1,1.1),
+  SDphe_d13C = c(0.4,0.4),
+  SDphe_d15N	= c(0.2,0.2),
+  SDlys_d15N = c(0.4,0.4))
+write.csv (Discr, here::here("mixingmodel", "Discr.csv"), row.names=FALSE)
+```
+
+#4. Create a consumer data file for human data
+
+```{r}
+Humans <- EAA %>% subset(group =="Human")
+write.csv (Humans, here('mixingmodel','Humans.csv'), row.names=FALSE)
+```
+
+#5 Apply a MixSIAR model
+
+#5a Load source data and consumer data
+
+```{r}
+#Load MixSIAR package
+library(MixSIAR)
+
+#Load mixture data
+mix <- load_mix_data(filename=here('mixingmodel','Humans.csv'), iso_names=c("ile_d13C", "leu_d13C", "lys_d13C", "val_d13C", "phe_d13C", "phe_d15N", "lys_d15N"),
+                     factors="Sample_ID",
+                     fac_random=FALSE,
+                     fac_nested=FALSE,
+                     cont_effects=NULL)
+
+#Load source data
+source <- load_source_data(filename=here('mixingmodel','Sources.csv'),
+                           source_factors=NULL,
+                           conc_dep=FALSE,
+                           data_type="means",
+                           mix)
+#Load discrimination data including the offests for the EAAs if requried. Note d13C lysine does not have a value. 
+discr <- load_discr_data(filename= here::here("mixingmodel", "Discr.csv"), mix)
+
+```
+
+
+#4b Create the JAGS file and rund model
+
+```{r}
+# Write the JAGS model file
+model_filename <- "MixSIAR_model.txt"# Name of the JAGS model file
+resid_err <-FALSE
+process_err <-TRUE
+write_JAGS_model(model_filename, resid_err, process_err, mix, source)
+```
+
+#4c Check model by running a test
+
+```{r}
+jags.1 <- run_model(run="test", mix, source, discr, model_filename)
+```
+
+#4d Run full model in long mode
+
+```{r}
+jags.1 <- run_model(run="very long", mix, source, discr, model_filename)
+```
+
+#5. Obtain model outputs and check for convergence
+
+#5a. Obtain the model outputs
+
+```{r}
+
+output_options <- list(summary_save = TRUE,
+                       summary_name = "summary_final",
+                       sup_post = TRUE,
+                       plot_post_save_pdf = FALSE,
+                       plot_post_name = "posterior_density",
+                       sup_pairs = TRUE,
+                       plot_pairs_save_pdf = FALSE,
+                       plot_pairs_name = "pairs_plot",
+                       sup_xy = TRUE,
+                       plot_xy_save_pdf = FALSE,
+                       plot_xy_name = "xy_plot",
+                       gelman = TRUE,
+                       heidel = TRUE,
+                       geweke = TRUE,
+                       diag_save = TRUE,
+                       diag_name = "diagnostics",
+                       indiv_effect = FALSE,
+                       plot_post_save_png = FALSE,
+                       plot_pairs_save_png = FALSE,
+                       plot_xy_save_png = FALSE,
+                       diag_save_ggmcmc = FALSE,
+                       return_obj=TRUE)
+```
+
+#5b .Get posterior chains into one tidy data frame
+
+```{r}
+# Get posterior chains into one tidy data frame
+library(R2jags)
+summary(jags.1)
+attach.jags(jags.1)
+```
+
+#5c. Run diagnostics and create a data frame with some summary stats.Check the stats in the consul to make sure the model has converged.
+
+```{r}
+diag <- output_diagnostics(jags.1, mix, source, output_options)
+head(diag$gelman)
+df.stats <- output_stats(jags.1, mix, source, output_options)
+rownames(df.stats)
+df.stats <- as.data.frame(df.stats)
+diag
+```
+
+#5d.Add rownames to outputs
+
+```{r}
+df.stats <- cbind(Sample_category = rownames(df.stats), df.stats)
+rownames(df.stats) <- 1:nrow(df.stats)
+df.stats
+```
+
+#5e.Separate column headers for later manipulation
+
+```{r}
+library(tidyr)
+df.stats <- df.stats %>% separate_wider_delim (Sample_category, ".", names = c("number", "Sample_ID", "Category"))
+```
+
+#5f.Re-arrange data and combine with original data set
+
+```{r}
+library(janitor)
+marine <- df.stats %>% filter(Category == c("marine_fauna"))
+terrestrial <- df.stats %>% filter(Category == c("terrestrial_fauna"))
+
+All_humans <- Data %>% subset(group =="Human")
+
+Result_mix <- Data  %>% left_join (marine, 
+           by = c("Sample_ID"), ) %>% left_join (terrestrial,
+           by = c("Sample_ID"), suffix = c("_marine", "_terrestrial")) 
+Result_mix <-Result_mix %>% janitor::clean_names(case = "none")#use janitor funciton to clean nemes
+# Write DataFrame to a CSV file
+Result_mixM = as.matrix(Result_mix )
+write.csv(Result_mixM, here::here("mixingmodel", "Result_mix.csv"), row.names = FALSE)
+```
+
+#6 Plot the data as a box plot
+
+#6a. Create a colour pallette
+
+```{r}
+cols <- c("Jabuticabeira II" = "#56B4E9", "Moraes" = "#009E73", "Piaçaguera" = "#E69F00", "Morro do Ouro" = "#F0E442", "terrestrial_herbivore" = "#999933","terrestrial_omnivore" = "#CC79A7", "marine_fauna" = "#0072B2")
+
+order <- c("Jabuticabeira II", "Moraes", "Piaçaguera", "Morro do Ouro", "terrestrial_herbivore","terrestrial_omnivore", "marine_fauna")
+
+```
+
+#6. create box plot
+
+```{r}
+library(ggplot2)
+library(scales)
+library (grid)
+box <- ggplot(Result_mix) + 
+    geom_point(data= Result_mix, aes(x=Sample_ID, y= Mean_marine, fill = Site), pch=21, size = 3, colour = "black")+
+  scale_fill_manual(values=c(cols), breaks=c(order))+
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1))+
+  ylab ("% marine source EAA")+
+  theme_bw()+
+  theme (axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.border=element_blank(),
+        plot.background=element_blank())
+box
+```
+
+#6c Plot % marine against bulkC isotope values
+
+```{r}
+Fig4a <-ggplot(Result_mix) + 
+  geom_errorbar(aes(y=d13C, x=Mean_marine, xmax=X95_percent_marine, xmin=X5_percent_marine), lwd=0.2)+
+    geom_point(data= Result_mix, aes(y=d13C, x= X50_percent_marine, fill = Site), pch=21, size = 3, colour = "black")+
+  scale_fill_manual(values=c(cols), breaks=c(order))+
+  scale_x_continuous(labels = scales::percent_format(accuracy = 1))+
+  scale_y_continuous(position="left", limits=c(-25,-5))+
+  ylab (expression(delta^{13}*C[collagen]*"(\u2030)"))+
+  xlab ("% marine source AA")+
+  theme_bw()+
+  coord_fixed(ratio = 0.05)
+ggsave(here('figures','Fig4a.svg'), width = 8.9, height = 8.9, dpi = 300, units = "cm", device='svg')
+Fig4a
+```
+
+#6d Plot % marine against bulkN isotope values
+
+```{r}
+Fig4b <-ggplot(Result_mix) + 
+  geom_errorbar(aes(y=d15N, x=Mean_marine, xmax=X95_percent_marine, xmin=X5_percent_marine),lwd=0.2)+
+    geom_point(data= Result_mix, aes(y=d15N, x= X50_percent_marine, fill = Site), pch=21, size = 3, colour = "black")+
+  scale_fill_manual(values=c(cols), breaks=c(order))+
+  scale_x_continuous(labels = scales::percent_format(accuracy = 1))+
+  scale_y_continuous(position="left", limits=c(0,20))+
+  ylab (expression(delta^{15}*N[collagen]*"(\u2030)"))+
+  xlab ("% marine source AA")+
+  coord_fixed(ratio = 0.05)+
+  theme_bw()
+ggsave(here('figures','Fig4b.svg'), width = 8.9, height = 8.9, dpi = 300, units = "cm", device='svg')
+Fig4b
+```
+
+#6e Plot % marine against bulkN isotope values
+
+```{r}
+Result_mix <-Result_mix %>% rowwise() %>% mutate(gluphe_d15N = (c(glu_d15N - phe_d15N)))
+Fig4c <-ggplot(Result_mix) + 
+  geom_errorbar(aes(y=gluphe_d15N, x=Mean_marine, xmax=X95_percent_marine, xmin=X5_percent_marine), lwd=0.2)+
+    geom_point(data= Result_mix, aes(y=gluphe_d15N, 
+                                     x= X50_percent_marine, fill = Site), pch=21, size = 3, colour = "black")+
+  scale_fill_manual(values=c(cols), breaks=c(order))+
+  scale_x_continuous(labels = scales::percent_format(accuracy = 1))+
+  ylab (expression(Delta^{15}*N[Glx-Phe]*"(\u2030)"))+
+  xlab ("% marine source AA")+
+  coord_fixed(ratio = 0.04)+
+  theme_bw()
+Fig4c
+```
+
+
+
+#7 Use TP mix to calculatge trophic level usingh Ramirez et al. values -<https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13678>
+
+#Dervie terrestrial beta value from herbivores assuming they are TP2. 
+```{r}
+T_herb <- Data %>%filter(category == "terrestrial_herbivore")
+T_herb <- T_herb %>%filter(!common_name == "guinea pig" & !common_name == "armadillo"& !common_name == "coati")
+T_herb <-  T_herb %>% rowwise() %>% mutate (beta = 7.6-(glu_d15N-phe_d15N) )
+beta_T = mean(T_herb$beta)
+sigma_beta_T = sd(T_herb$beta)
+beta_T
+sigma_beta_T
+```
+
+
+#7a Calculate the uncertaintieson trophic level estimations
+
+```{r}
+# ---- Input Data ----
+# Measured values
+beta_M <- -3.3 #Marine beta value from  Ramirez et al.
+beta_T <- 6.6 #Terrestrial beta value from Ramirez et al.
+TDF <- 7.6  # Trophic discriminat factor from Ramirez
+
+# Standard deviations from Jarmen
+#sigma_beta_M <- 0.9 # mvalues from Jarme arine beta uncertainty
+#sigma_beta_T <- 1.6  # values from Jarmen terrestrial beta uncertainty
+#sigma_TDF <- 1.1 # TDF uncertainty from Neilsen
+
+# Standard deviations from Ramirez
+sigma_beta_M <- 1.8 # mvalues from Ramirez  arine beta uncertainty
+sigma_beta_T <- 3.4  # values from Ramirez terrestrial beta uncertainty
+sigma_TDF <- 1.1 # TDF uncertainty from Neilsen
+
+
+# Partial derivatives and add to new sheet 
+Result_mix_TP <- Result_mix %>% rowwise() %>%
+mutate(dTP_dGlu = ((1/TDF)^2)*(glu_d15Nstdev^2))%>%mutate(dTP_dPhe=((-1/TDF)^2)*(phe_d15Nstdev^2))%>%mutate(dTP_dBeta=(((beta_M-beta_T)/TDF)^2)*(SD_marine^2))%>%mutate(dTP_dBeta_T=(((Mean_terrestrial)/TDF)^2)*(sigma_beta_T^2))%>%mutate(dTP_dBeta_M=((Mean_marine/TDF)^2)*(sigma_beta_M^2))%>%mutate(dTP_sigma=(((-1/(TDF^2))*(glu_d15N-phe_d15N+((Mean_terrestrial)*beta_T)+(Mean_marine*beta_M)))^2)*(sigma_TDF^2))
+```
+
+```{r}
+# Calculate the formula using Ramirez values and add the combined uncertainty- 
+Result_mix_TP_final <- Result_mix_TP %>%
+  rowwise() %>% mutate(Mix_TP = (((glu_d15N - phe_d15N) + (((Mean_marine)*beta_M) + ((Mean_terrestrial))*beta_T)) / TDF) + 1)%>% mutate(Mix_TP_sigma = (sqrt(dTP_dGlu + dTP_dPhe + dTP_dBeta +dTP_dBeta_T + dTP_dBeta_M + dTP_sigma)))
+```
+
+```{r}
+Fig4c <- ggplot(Result_mix_TP_final) + 
+  geom_errorbar(aes(y=Mix_TP, x=Mean_marine, ymax=(Mix_TP+Mix_TP_sigma), ymin=(Mix_TP-Mix_TP_sigma)), linewidth=0.2)+
+  geom_errorbarh(aes(y=Mix_TP, x=Mean_marine, xmax=(Mean_marine+SD_marine),xmin=(Mean_marine-SD_marine)), linewidth=0.2)+
+    geom_point(data= Result_mix_TP_final, aes(y=Mix_TP, x= Mean_marine, fill = Site), pch=21, size = 3, colour = "black")+
+  scale_fill_manual(values=c(cols), breaks=c(order))+
+  scale_x_continuous(labels = scales::percent_format(accuracy = 1))+
+  ylab ("Estimated trophic positon - 'BetaMix'")+
+  xlab ("% marine source AA_MixSIAR")+
+  geom_hline (yintercept=c(2.04,2.57), lwd=0.2, colour="red", linetype = "dashed")+
+  coord_fixed(ratio = 0.3)+
+  theme_bw()
+Fig4c
+```
+
+```{r}
+library(ggpubr)
+Fig4 <- ggarrange (ggarrange(Fig4a, Fig4b, ncol=2, labels = c("A","B"), common.legend = TRUE, legend="none" ), Fig4c, labels = c("C"), nrow=2, legend="bottom", common.legend = TRUE)
+Fig4
+
+ggsave(here('figures','Fig4.svg'), width = 17.8, height = 17.8, dpi = 300, units = "cm", device='svg')
+```
+
+Plot against d34S values
+
+```{r}
+Fig5 <-ggplot(Result_mix_TP_final) + 
+  geom_errorbar(aes(y=Mix_TP, x=d34S, ymax=(Mix_TP+Mix_TP_sigma), ymin=(Mix_TP-Mix_TP_sigma)), linewidth=0.2)+
+    geom_point(data= Result_mix_TP_final, aes(y=Mix_TP, x= d34S, fill =Site), pch=21, size = 3, colour = "black")+
+  scale_fill_manual(values=c(cols), breaks=c(order))+
+  ylab ("Estimated TP")+
+  xlab (expression(delta^{34}*S[collagen]*"(\u2030)"))+
+  scale_x_continuous(position="bottom", limits=c(-5,15))+
+  coord_fixed(ratio = 7.5)+
+  theme_bw()+
+  theme(legend.position="bottom")
+Fig5
+ggsave(here('figures','Fig5.svg'), width = 8.9, height = 8.9, dpi = 300, units = "cm", device='svg')
+
+```
+
+#8 Calculate the correlation by site with between TP and S
+
+```{r}
+cor_results <- subset(Result_mix_TP_final, group =="Human") %>%
+  group_by(group) %>%
+  summarise(
+    correlation = cor.test(Mean_marine, ala_d13C)$estimate,  # Pearson correlation coefficient
+    p_value = cor.test(Mean_marine, ala_d13C)$p.value        # p-value
+  )
+cor_results
+```
+
+`

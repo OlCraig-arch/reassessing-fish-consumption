@@ -48,13 +48,9 @@ Create a colour pallette
 
 ```{r}
 cols <- c("Jabuticabeira II" = "#56B4E9", "Moraes" = "#009E73", "Piaçaguera" = "#E69F00", "Morro do Ouro" = "#F0E442", "terrestrial_herbivore" = "#999933","terrestrial_omnivore" = "#CC79A7", "marine_fauna" = "#0072B2")
-
 order <- c("Jabuticabeira II", "Moraes", "Piaçaguera", "Morro do Ouro", "terrestrial_herbivore","terrestrial_omnivore", "marine_fauna")
-
 order <- c("Jabuticabeira II", "Moraes", "Piaçaguera", "Morro do Ouro")
-
 cols1 <- c("Jabuticabeira II" = "#56B4E9", "Moraes" = "#009E73", "Piaçaguera" = "#E69F00", "Morro do Ouro" = "#F0E442", "Freshwater" = "#999999", "Marine" = "#0072B2", "C3 Fauna" = "#000000", "C3 Humans" = "#D55E00", "C4_humans" = "#CC79A7") 
-          
 order1 <- c("Jabuticabeira II","Morro do Ouro", "Piaçaguera", "Moraes", "Piaçaguera","Morro do Ouro", "Freshwater", "Marine", "C3 Fauna", "C3 Humans", "C4_humans") 
 ```
 
@@ -258,8 +254,8 @@ Fig3c
 
 ```{r}
 Fig3d <-ggplot() +
-  geom_point(data=fauna, aes(y=lysphe_d15N,  x=valphe_d13C, colour=category), alpha=0.8, pch=23, size=4)+
-  geom_point(data=humans, aes(y=lysphe_d15N,  x=valphe_d13C, fill=Site), colour="black", pch=21, size=4)+
+  geom_point(data=fauna, aes(y=lysphe_15N,  x=valphe_13C, colour=category), alpha=0.8, pch=23, size=4)+
+  geom_point(data=humans, aes(y=lysphe_15N,  x=valphe_13C, fill=Site), colour="black", pch=21, size=4)+
   labs(y=expression(Delta^{15}*N[Lys-Phe]*"(\u2030)"), x=expression(Delta^{13}*C[Val-Phe]*"(\u2030)"))+
  scale_fill_manual(values=c(cols), breaks=c(order))+
   scale_colour_manual(values=c(cols), breaks=c(order))+

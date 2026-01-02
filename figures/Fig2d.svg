@@ -75,25 +75,25 @@
 <polygon points='123.80,177.95 129.59,172.16 123.80,166.36 118.01,172.16 ' style='stroke-width: 0.71; stroke: #000000; stroke-opacity: 0.60; fill: #CC79A7; fill-opacity: 0.60;' />
 <polygon points='92.93,194.49 98.73,188.70 92.93,182.90 87.14,188.70 ' style='stroke-width: 0.71; stroke: #000000; stroke-opacity: 0.60; fill: #999933; fill-opacity: 0.60;' />
 <polygon points='131.20,139.25 136.99,133.46 131.20,127.66 125.40,133.46 ' style='stroke-width: 0.71; stroke: #000000; stroke-opacity: 0.60; fill: #CC79A7; fill-opacity: 0.60;' />
-<line x1='166.12' y1='119.62' x2='159.55' y2='112.91' style='stroke-width: 1.07;' />
-<text x='128.13' y='111.52' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='18.98px' lengthAdjust='spacingAndGlyphs'>snook</text>
-<text x='161.18' y='65.05' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='34.78px' lengthAdjust='spacingAndGlyphs'>black drum</text>
-<text x='130.06' y='86.86' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='20.55px' lengthAdjust='spacingAndGlyphs'>catfish</text>
-<text x='116.21' y='130.70' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='20.55px' lengthAdjust='spacingAndGlyphs'>catfish</text>
-<text x='178.50' y='98.66' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='62.05px' lengthAdjust='spacingAndGlyphs'>whitemouth croaker</text>
+<line x1='166.09' y1='119.60' x2='159.55' y2='112.91' style='stroke-width: 1.07;' />
+<text x='128.14' y='111.50' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='18.98px' lengthAdjust='spacingAndGlyphs'>snook</text>
+<text x='161.20' y='65.03' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='34.78px' lengthAdjust='spacingAndGlyphs'>black drum</text>
+<text x='130.05' y='86.85' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='20.55px' lengthAdjust='spacingAndGlyphs'>catfish</text>
+<text x='116.20' y='130.70' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='20.55px' lengthAdjust='spacingAndGlyphs'>catfish</text>
+<text x='178.55' y='98.68' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='62.05px' lengthAdjust='spacingAndGlyphs'>whitemouth croaker</text>
 <text x='154.32' y='110.97' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='18.98px' lengthAdjust='spacingAndGlyphs'>snook</text>
-<text x='114.85' y='99.19' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='20.55px' lengthAdjust='spacingAndGlyphs'>catfish</text>
-<text x='152.02' y='135.28' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='17.41px' lengthAdjust='spacingAndGlyphs'>shark</text>
-<text x='176.62' y='123.25' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='17.41px' lengthAdjust='spacingAndGlyphs'>shark</text>
-<text x='178.58' y='142.71' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='17.41px' lengthAdjust='spacingAndGlyphs'>shark</text>
-<text x='83.62' y='199.21' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='32.80px' lengthAdjust='spacingAndGlyphs'>guinea pig</text>
-<text x='68.49' y='186.90' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='14.23px' lengthAdjust='spacingAndGlyphs'>deer</text>
-<text x='101.24' y='178.41' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='24.92px' lengthAdjust='spacingAndGlyphs'>peccary</text>
-<text x='120.47' y='197.59' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='24.92px' lengthAdjust='spacingAndGlyphs'>peccary</text>
-<text x='109.20' y='162.67' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='24.92px' lengthAdjust='spacingAndGlyphs'>peccary</text>
-<text x='137.19' y='181.97' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='28.84px' lengthAdjust='spacingAndGlyphs'>armadillo</text>
-<text x='99.17' y='184.97' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='32.80px' lengthAdjust='spacingAndGlyphs'>guinea pig</text>
-<text x='123.99' y='143.24' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='15.02px' lengthAdjust='spacingAndGlyphs'>coati</text>
+<text x='114.84' y='99.17' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='20.55px' lengthAdjust='spacingAndGlyphs'>catfish</text>
+<text x='151.99' y='135.31' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='17.41px' lengthAdjust='spacingAndGlyphs'>shark</text>
+<text x='176.59' y='123.23' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='17.41px' lengthAdjust='spacingAndGlyphs'>shark</text>
+<text x='164.11' y='157.25' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='17.41px' lengthAdjust='spacingAndGlyphs'>shark</text>
+<text x='83.57' y='199.22' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='32.80px' lengthAdjust='spacingAndGlyphs'>guinea pig</text>
+<text x='68.48' y='186.90' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='14.23px' lengthAdjust='spacingAndGlyphs'>deer</text>
+<text x='101.20' y='178.37' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='24.92px' lengthAdjust='spacingAndGlyphs'>peccary</text>
+<text x='120.46' y='197.57' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='24.92px' lengthAdjust='spacingAndGlyphs'>peccary</text>
+<text x='109.16' y='162.62' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='24.92px' lengthAdjust='spacingAndGlyphs'>peccary</text>
+<text x='137.16' y='181.95' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='28.84px' lengthAdjust='spacingAndGlyphs'>armadillo</text>
+<text x='99.18' y='184.97' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='32.80px' lengthAdjust='spacingAndGlyphs'>guinea pig</text>
+<text x='123.96' y='143.27' text-anchor='middle' style='font-size: 7.11px; font-family: "Arial";' textLength='15.02px' lengthAdjust='spacingAndGlyphs'>coati</text>
 <rect x='45.40' y='42.78' width='167.84' height='168.48' style='stroke-width: 1.07; stroke: #333333;' />
 </g>
 <g clip-path='url(#cpMC4wMHwyNTIuMjh8MC4wMHwyNTIuMjg=)'>
