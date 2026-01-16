@@ -5,26 +5,111 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+#1Load packages and colour pallette
+
+```{r, echo=FALSE}
+library(dplyr)
+library(ggplot2)
+library(data.table)
+library(tidyr)
+library(stringr)
+library(Hmisc)
+library(ggpubr)
+library(googlesheets4)
+library(here)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+#2 Load data 
+```{r}
+Data  <- read.csv(here('data','SambaquisAA.csv'))
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+#3 QC Check the CSIA data by plotting Pro against Hyp va Pro for each isotope. 
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+For N 
+```{r}
+S1A <- ggplot(data=Data, aes(y=hyp_d15N, x=pro_d15N))+ 
+  labs(x=expression(delta^{15}*N[Pro]*"(\u2030)"), y=expression(delta^{15}*N[Hyp]*"(\u2030)"))+
+  scale_x_continuous(position="bottom", limits=c(5,25))+
+  scale_y_continuous(position = "left",limits=c(5,25))+
+  geom_errorbar(aes(ymin=hyp_d15N-hyp_d15Nstdev, ymax=hyp_d15N+hyp_d15Nstdev), linewidth = 0.2, width=0.2)+
+  geom_errorbar(aes(xmin=pro_d15N-pro_d15Nstdev, xmax=pro_d15N+pro_d15Nstdev), linewidth = 0.2, width=0.2)+
+  geom_point(colour="black", fill= "darkblue", alpha=0.5, pch=21, size=2)+
+  geom_abline(intercept=c(0), slope= 1, linetype="solid")+
+  theme_bw()+
+  coord_fixed(ratio = 1)
+S1A
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+For C
+```{r}
+S1B <- ggplot(data=Data, aes(y=hyp_d13C, x=pro_d13C))+ 
+  labs(x=expression(delta^{13}*C[Pro]*"(\u2030)"), y=expression(delta^{13}*C[Hyp]*"(\u2030)"))+
+  scale_x_continuous(position="bottom", limits=c(-24,-7))+
+  scale_y_continuous(position = "left",limits=c(-24,-7))+
+  geom_point(colour="black", fill= "darkred", alpha=0.5, pch=21, size=2)+
+  geom_errorbar(aes(ymin=hyp_d13C-hyp_d13C_err, ymax=hyp_d13C+hyp_d13C_err), linewidth = 0.2, width=0.2)+
+   geom_errorbar(aes(xmin=pro_d13C-pro_d13C_err, xmax=pro_d13C+pro_d13C_err), linewidth = 0.2, width=0.2)+
+  geom_abline(intercept=c(0), slope= 1, linetype="solid")+
+  theme_bw()+
+  coord_fixed(ratio = 1)
+S1_B
+```
+
+
+
+#3 Check quality contol through estimated mass balance against observed bulk values.
+```{r}
+
+#QC1 d15N mass balance
+S1C <- ggplot(data=Data, aes(y=d15N_est, x=d15N))+ 
+  labs(x=expression(delta^{15}*N[OBS]*"(\u2030)"), y=expression(delta^{15}*N[EST]*"(\u2030)"))+
+  scale_x_continuous(position="bottom", limits=c(5,25))+
+  scale_y_continuous(position = "left",limits=c(5,25))+
+  geom_point(colour="black", fill= "darkblue", alpha=0.5, pch=21, size=2)+
+  geom_abline(intercept=c(0), slope= 1, linetype="solid")+
+  theme_bw()+
+  coord_fixed(ratio = 1)
+S1C
+```
+
+```{r}
+#QC2 d13C mass balance
+S1D <- ggplot(data=Data, aes(y=d13C_est, x=d13C))+ 
+  labs(x=expression(delta^{13}*C[OBS]*"(\u2030)"), y=expression(delta^{13}*C[EST]*"(\u2030)"))+
+  scale_x_continuous(position="bottom", limits=c(-25,-5))+
+  scale_y_continuous(position = "left",limits=c(-25,-5))+
+  geom_point(fill= "darkred", alpha=0.5, pch=21, size=2)+
+  geom_abline(intercept=c(0), slope= 1, linetype="solid")+
+  theme_bw()+
+  coord_fixed(ratio = 1)
+S1D
+```
+
+Save Supplementary Figure 1
+```{r}
+library(ggpubr)
+Fig2 <- ggarrange(S1A, S1B, S1C, S1D,
+                    labels = c("A", "B","C", "D"),
+                    ncol = 2, nrow = 2, widths = c(2, 2), legend="none")
+Fig2
+ggsave(here('figures','SupplementaryFig1.svg'), width = 17.8, height = 17.8, dpi = 300, units = "cm", device='svg')
+```
+
+#Generate correlation coefficients
+
+```{r}
+
+QC1corr <- cor(Data$pro_d13C, Data$hyp_d13C, method = 'pearson')
+QC2corr <- cor(Data$pro_d15N, Data$hyp_d15N, method = 'pearson')
+QC3corr <- cor(Data$d13C_est, Data$d13C, method = 'pearson')
+QC4corr <- cor(Data$d15N_est, Data$d15N, method = 'pearson')
+QC1corr
+QC2corr
+QC3corr
+QC4corr
+```
+
+

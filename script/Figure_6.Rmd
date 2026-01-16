@@ -51,7 +51,7 @@ order1 <- c("Jabuticabeira II","Morro do Ouro", "Piaçaguera", "Moraes", "Piaça
 ```{r}
 library (here)
 Data  <-  read.csv(here('data','SambaquisAA.csv'))
-data <- data %>% rowwise() %>% mutate(glugly_15N = (c(glu_d15N - gly_d15N)))
+data <- Data %>% rowwise() %>% mutate(glugly_15N = (c(glu_d15N - gly_d15N)))
 humans <-filter(data, group == "Human")
 fauna <-filter(data, group == "Fauna")
 ```
@@ -61,12 +61,12 @@ fauna <-filter(data, group == "Fauna")
 library(ggrepel)
 library(here)
 Fig6a <-ggplot()+
-  labs(y=expression(delta^{15}*N[gly]*"(\u2030)"), x=expression(delta^{15}*N[phe]*"(\u2030)"))+
+  labs(y=expression(delta^{15}*N[Gly]*"(\u2030)"), x=expression(delta^{15}*N[Phe]*"(\u2030)"))+
   scale_x_continuous(position="bottom", limits=c(0,20))+
   scale_y_continuous(position = "left", limits=c(0,20))+
- geom_point(data=fauna, aes(y=gly_d15N, x=phe_d15N, fill=category), colour="black", alpha=0.8, pch=23, size=4)+
+  geom_point(data=fauna, aes(y=gly_d15N, x=phe_d15N, fill=category), colour="black", alpha=0.8, pch=23, size=4)+
   geom_point(data=humans, aes(y=gly_d15N, x=phe_d15N, fill=Site), colour="black",  alpha=0.8, pch=21, size=4)+
-  geom_text_repel(data=fauna, aes(y=gly_d15N, x=phe_d15N, label=common_name), size=2.5)+ 
+  #geom_text_repel(data=fauna, aes(y=gly_d15N, x=phe_d15N, label=common_name), size=2.5)+ 
   scale_fill_manual(values=c(cols), breaks=c(order))+
     theme_bw()+
   coord_fixed(ratio = 1)
@@ -75,12 +75,12 @@ Fig6a
 
 ```{r}
 Fig6b <-ggplot()+
-  labs(y=expression(delta^{15}*N[gly]*"(\u2030)"), x=expression(delta^{15}*N[collagen]*"(\u2030)"))+
+  labs(y=expression(delta^{15}*N[Gly]*"(\u2030)"), x=expression(delta^{15}*N[collagen]*"(\u2030)"))+
   scale_x_continuous(position="bottom", limits=c(0,20))+
   scale_y_continuous(position = "left", limits=c(0,20))+
  geom_point(data=fauna, aes(y=gly_d15N, x=d15N, fill=category), colour="black", alpha=0.8, pch=23, size=4)+
   geom_point(data=humans, aes(y=gly_d15N, x=d15N, fill=Site), colour="black",  alpha=0.8, pch=21, size=4)+
-  geom_text_repel(data=fauna, aes(y=gly_d15N, x=d15N, label=common_name), size=2.5)+ 
+  #geom_text_repel(data=fauna, aes(y=gly_d15N, x=d15N, label=common_name), size=2.5)+ 
   scale_fill_manual(values=c(cols), breaks=c(order))+
     theme_bw()+
   coord_fixed(ratio = 1)
@@ -88,12 +88,12 @@ Fig6b
 ```
 ```{r}
 Fig6c <-ggplot()+
-  labs(y=expression(delta^{15}*N[gly]*"(\u2030)"), x=expression(delta^{15}*N[glx]*"(\u2030)"))+
+  labs(y=expression(delta^{15}*N[Gly]*"(\u2030)"), x=expression(delta^{15}*N[Glx]*"(\u2030)"))+
   scale_x_continuous(position="bottom", limits=c(0,30))+
   scale_y_continuous(position = "left", limits=c(0,20))+
  geom_point(data=fauna, aes(y=gly_d15N, x=glu_d15N, fill=category), colour="black", alpha=0.8, pch=23, size=4)+
   geom_point(data=humans, aes(y=gly_d15N, x=glu_d15N, fill=Site), colour="black", alpha=0.8,  pch=21, size=4)+
-  geom_text_repel(data=fauna, aes(y=gly_d15N, x=glu_d15N, label=common_name), size=2.5)+ 
+#geom_text_repel(data=fauna, aes(y=gly_d15N, x=glu_d15N, label=common_name), size=2.5)+ 
   scale_fill_manual(values=c(cols), breaks=c(order))+
     theme_bw()+
   coord_fixed(ratio = 1.3)
@@ -105,11 +105,11 @@ Fig6c
 
 ```{r}
 library(ggpubr)
-Fig6 <- ggarrange(Fig6b, Fig6c,
-                    labels = c("A", "B"),
-                    ncol = 2, nrow = 1, common.legend = TRUE, legend="bottom" )
+Fig6 <- ggarrange(Fig6a, Fig6b, Fig6c,
+                    labels = c("A", "B", "C"),
+                    ncol = 2, nrow = 2, common.legend = TRUE, legend="bottom" )
 Fig6
-ggsave(here('figures','Fig6.svg'), width = 17.8, height = 8.9, dpi = 300, units = "cm", device='svg')
+ggsave(here('figures','Fig6.svg'), width = 17.8, height = 17.8, dpi = 300, units = "cm", device='svg')
 ```
 
 

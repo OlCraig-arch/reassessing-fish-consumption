@@ -26,8 +26,6 @@ library(here)
 
 ```{r}
 Data  <- read.csv(here('data','SambaquisAA.csv'))
-humans <- filter(Data, group == "Human")
-fauna <- filter(Data, group == "Fauna")
 ```
 
 
@@ -36,11 +34,7 @@ fauna <- filter(Data, group == "Fauna")
 
 ```{r}
 cols <- c("Jabuticabeira II" = "#56B4E9", "Moraes" = "#009E73", "Piaçaguera" = "#E69F00", "Morro do Ouro" = "#F0E442", "terrestrial_herbivore" = "#999933","terrestrial_omnivore" = "#CC79A7", "marine_fauna" = "#0072B2")
-ols <- c("Jabuticabeira II" = "#56B4E9", "Moraes" = "#009E73", "Piaçaguera" = "#E69F00", "Morro do Ouro" = "#F0E442", "terrestrial_herbivore" = "#999933","terrestrial_omnivore" = "#CC79A7", "marine_fauna" = "#0072B2")
 order <- c("Jabuticabeira II", "Moraes", "Piaçaguera", "Morro do Ouro", "terrestrial_herbivore","terrestrial_omnivore", "marine_fauna")
-order <- c("Jabuticabeira II", "Moraes", "Piaçaguera", "Morro do Ouro")
-cols1 <- c("Jabuticabeira II" = "#56B4E9", "Moraes" = "#009E73", "Piaçaguera" = "#E69F00", "Morro do Ouro" = "#F0E442", "Freshwater" = "#999999", "Marine" = "#0072B2", "C3 Fauna" = "#000000", "C3 Humans" = "#D55E00", "C4_humans" = "#CC79A7") 
-order1 <- c("Jabuticabeira II","Morro do Ouro", "Piaçaguera", "Moraes", "Piaçaguera","Morro do Ouro", "Freshwater", "Marine", "C3 Fauna", "C3 Humans", "C4_humans") 
 ```
 
 
@@ -50,22 +44,22 @@ order1 <- c("Jabuticabeira II","Morro do Ouro", "Piaçaguera", "Moraes", "Piaça
 #4a. First organise the data and normalise to row mean. 
 
 ```{r}
-Sam_N <- Data %>%  select(Site, Sample_ID,category, group, ala_d15N, asp_d15N, glu_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N)#drop d15N_Ile as missing values 
+Sam_N <- Data %>%  select(Site, Sample_ID,category, group, ala_d15N, ser_d15N, asp_d15N, glu_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N)#drop d15N_Ile as missing values 
 Sam_N  <- na.omit(Sam_N)
 #Create a new coloumn containing the row mean of the key amino acid for each row. . 
-Sam_N  <- Sam_N  %>% rowwise() %>% mutate(row_mean = mean(c(ala_d15N, asp_d15N, glu_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N)))#
+Sam_N  <- Sam_N  %>% rowwise() %>% mutate(row_mean = mean(c(ala_d15N, asp_d15N, glu_d15N, ser_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N)))#
 #ubtract the row mean from each of the row values to normalize
-Sam_N  <- Sam_N  %>% rowwise() %>% mutate(across(c(ala_d15N, asp_d15N, glu_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N), ~ .x - row_mean))
+Sam_N  <- Sam_N  %>% rowwise() %>% mutate(across(c(ala_d15N, asp_d15N, glu_d15N, ser_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N), ~ .x - row_mean))
 ```
 
 
 ```{r}
-Sam_C <- Data %>%  select(Site, Sample_ID, category, group, ala_d13C, asp_d13C, glu_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)#drop d15N_Ile as missing values 
+Sam_C <- Data %>%  select(Site, Sample_ID, category, group, ala_d13C, asp_d13C, ser_d13C, glu_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)#drop d15N_Ile as missing values 
 Sam_C <- na.omit(Sam_C)
 #Create a new coloumn containing the row mean of the key amino acid for each row. . 
-Sam_C  <- Sam_C  %>% rowwise() %>% mutate(row_mean = mean(c(ala_d13C, asp_d13C, glu_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)))#
+Sam_C  <- Sam_C  %>% rowwise() %>% mutate(row_mean = mean(c(ala_d13C, asp_d13C, ser_d13C, glu_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)))#
 #Subtract the row mean from each of the row values to normalize
-Sam_C  <- Sam_C  %>% rowwise() %>% mutate(across(c(ala_d13C, asp_d13C, glu_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C), ~ .x - row_mean))
+Sam_C  <- Sam_C  %>% rowwise() %>% mutate(across(c(ala_d13C, asp_d13C, glu_d13C, ser_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C), ~ .x - row_mean))
 ```
 
 #4b Then perform the PCA and visualise the results.
@@ -74,7 +68,7 @@ Carbon
 
 ```{r}
 #extract the amino acid values
-PCA_C <- Sam_C %>%  select(ala_d13C, asp_d13C, glu_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)
+PCA_C <- Sam_C %>%  select(ala_d13C, asp_d13C, glu_d13C, ser_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)
 PCA <- prcomp(PCA_C, scale. = TRUE)
 
 # Calculate the percentage of variance explained by each linear discriminant
@@ -92,8 +86,8 @@ PCAloadings <- data.frame(Variables = rownames(PCA$rotation), PCA$rotation)
 
 # Visuqlise the PCA
 S2A <- ggplot ()+
-  geom_point(data=fauna, aes(y=PC1, x=PC2, colour=category), alpha=0.8, pch=23, size=4)+
-    geom_point(data=humans, aes(y=PC1, x=PC2, fill=Site), colour="black", pch=21, size=3.5)+
+  geom_point(data=fauna, aes(y=PC1, x=PC2, colour=category), pch=23, size=4, lineweight=2)+
+    geom_point(data=humans, aes(y=PC1, x=PC2, fill=Site), alpha=0.8, colour="black", pch=21, size=3.5)+
   geom_segment(data = PCAloadings, aes(x = 0, y = 0, xend = (PC1*7),
      yend = (PC2*7)), arrow = arrow(length = unit(1/2, "picas")),
      color = "black") + 
@@ -113,7 +107,7 @@ Nitrogen
 
 ```{r}
 #extract the amino acid values
-PCA_N <- Sam_N %>%  select(ala_d15N, asp_d15N, glu_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N)
+PCA_N <- Sam_N %>%  select(ala_d15N, ser_d15N, asp_d15N, glu_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N)
 PCA <- prcomp(PCA_N, scale. = TRUE)
 
 # Calculate the percentage of variance explained by each linear discriminant
@@ -132,8 +126,8 @@ PCAloadings <- data.frame(Variables = rownames(PCA$rotation), PCA$rotation)
 # Visuqlise the PCA 
 library(here)
 S2B <- ggplot ()+
-  geom_point(data=fauna, aes(y=PC1, x=PC2, colour=category), alpha=0.8, pch=23, size=4)+
-    geom_point(data=humans, aes(y=PC1, x=PC2, fill=Site), colour ="black", pch=21, size=3.5)+
+  geom_point(data=fauna, aes(y=PC1, x=PC2, colour=category), lineweight=2, pch=23, size=4)+
+    geom_point(data=humans, aes(y=PC1, x=PC2, fill=Site), alpha=0.8, colour ="black", pch=21, size=3.5)+
   geom_segment(data = PCAloadings, aes(x = 0, y = 0, xend = (PC1*7),
      yend = (PC2*7)), arrow = arrow(length = unit(1/2, "picas")),
      color = "black") + 
@@ -153,13 +147,13 @@ S2B
 #5. Conduct PCA on all samples and 10 amino acids without normalistation
 
 
-#5a. First organise the data and normalise to row mean. 
+#5a. First organise the data.
 
 ```{r}
-Sam_N <- Data %>%  select(Site, Sample_ID,category, group, ala_d15N, asp_d15N, glu_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N)#drop d15N_Ile as missing values 
-Sam_N  <- na.omit(Sam_N)
-Sam_C <- Data %>%  select(Site, Sample_ID, category, group, ala_d13C, asp_d13C, glu_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)#drop d15N_Ile as missing values 
-Sam_C <- na.omit(Sam_C)
+Sam_Nx <- Data %>%  select(Site, Sample_ID,category, group, ala_d15N, ser_d15N, asp_d15N, glu_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N)#drop d15N_Ile as missing values 
+Sam_Nx  <- na.omit(Sam_Nx)
+Sam_Cx <- Data %>%  select(Site, Sample_ID, category, group, ala_d13C, asp_d13C, ser_d13C, glu_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)#drop d15N_Ile as missing values 
+Sam_Cx <- na.omit(Sam_Cx)
 ```
 
 #5b Then perform the PCA and visualise the results.
@@ -168,8 +162,8 @@ Carbon
 
 ```{r}
 #extract the amino acid values
-PCA_C_raw <- Sam_C %>%  select(ala_d13C, asp_d13C, glu_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)
-PCA <- prcomp(PCA_C_raw, scale. = TRUE)
+PCA_Cx<- Sam_Cx %>%  select(ala_d13C, asp_d13C, glu_d13C, ser_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)
+PCAx <- prcomp(PCA_Cx, scale. = TRUE)
 
 # Calculate the percentage of variance explained by each linear discriminant
 percent_variance_explained <- PCA$sdev^2 / sum(PCA$sdev^2) * 100
@@ -177,22 +171,22 @@ pc1_label <- paste0("PC 1 (", round(percent_variance_explained[1], 2), "%)")
 pc2_label <- paste0("PC 2 (", round(percent_variance_explained[2], 2), "%)")
 
 # Extract PC axes for plotting
-PCAvalues_C <- data.frame(Site = Sam_C$Site, group = Sam_C$group, category = Sam_C$category, PCA$x)
-humans <-filter(PCAvalues_C, group == "Human")
-fauna <-filter(PCAvalues_C, group == "Fauna")
+PCAvalues_Cx <- data.frame(Site = Sam_C$Site, group = Sam_Cx$group, category = Sam_Cx$category, PCAx$x)
+humansx <-filter(PCAvalues_Cx, group == "Human")
+faunax <-filter(PCAvalues_Cx, group == "Fauna")
 
 # Extract loadings of the variables
-PCAloadings <- data.frame(Variables = rownames(PCA$rotation), PCA$rotation)
+PCAloadingsx <- data.frame(Variables = rownames(PCAx$rotation), PCAx$rotation)
 
 # Visuqlise the PCA
 S2C <- ggplot ()+
-  geom_point(data=fauna, aes(y=PC1, x=PC2, colour=category), alpha=0.8, pch=23, size=4)+
-    geom_point(data=humans, aes(y=PC1, x=PC2, fill=Site), colour="black", pch=21, size=3.5)+
-  geom_segment(data = PCAloadings, aes(x = 0, y = 0, xend = (PC1*7),
+  geom_point(data=faunax, aes(y=PC1, x=PC2, colour=category), lineweight=2, pch=23, size=4)+
+    geom_point(data=humansx, aes(y=PC1, x=PC2, fill=Site), alpha=0.8, colour="black", pch=21, size=3.5)+
+  geom_segment(data = PCAloadingsx, aes(x = 0, y = 0, xend = (PC1*7),
      yend = (PC2*7)), arrow = arrow(length = unit(1/2, "picas")),
      color = "black") + 
-  annotate ("text", x = (PCAloadings$PC1*8), y = (PCAloadings$PC2*8),
-     label = PCAloadings$Variables,size=3)+
+  annotate ("text", x = (PCAloadingsx$PC1*8), y = (PCAloadingsx$PC2*8),
+     label = PCAloadingsx$Variables,size=3)+
   scale_fill_manual(values=c(cols), breaks=c(order))+
   scale_colour_manual(values=c(cols), breaks=c(order))+
   xlim(6,-6)+
@@ -206,32 +200,33 @@ Nitrogen
 
 ```{r}
 #extract the amino acid values
-PCA_N_raw <- Sam_N %>%  select(ala_d15N, asp_d15N, glu_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N)
-PCA <- prcomp(PCA_N_raw, scale. = TRUE)
+PCA_Nx<- Sam_Nx %>%  select(ala_d15N, asp_d15N, ser_d15N, glu_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N)
+PCAx <- prcomp(PCA_Nx, scale. = TRUE)
 
 # Calculate the percentage of variance explained by each linear discriminant
 percent_variance_explained <- PCA$sdev^2 / sum(PCA$sdev^2) * 100
 pc1_label <- paste0("PC 1 (", round(percent_variance_explained[1], 2), "%)")
 pc2_label <- paste0("PC 2 (", round(percent_variance_explained[2], 2), "%)")
+PC_label <- c("ala", "asp", "glu", "gly", "thr", "leu", "lys", "val", "phe")
 
 # Extract PC axes for plotting
-PCAvalues_N <- data.frame(Site = Sam_N$Site, group = Sam_N$group, category = Sam_N$category, PCA$x)
-humans <-filter(PCAvalues_N, group == "Human")
-fauna <-filter(PCAvalues_N, group == "Fauna")
+PCAvalues_Nx <- data.frame(Site = Sam_Nx$Site, group = Sam_Nx$group, category = Sam_Nx$category, PCAx$x)
+humansx <-filter(PCAvalues_Nx, group == "Human")
+faunax <-filter(PCAvalues_Nx, group == "Fauna")
 
 # Extract loadings of the variables
-PCAloadings <- data.frame(Variables = rownames(PCA$rotation), PCA$rotation)
+PCAloadingsx <- data.frame(Variables = rownames(PCAx$rotation), PCAx$rotation)
 
 # Visuqlise the PCA 
 library(here)
 S2D <- ggplot ()+
-  geom_point(data=fauna, aes(y=PC1, x=PC2, colour=category), alpha=0.8, pch=23, size=4)+
-    geom_point(data=humans, aes(y=PC1, x=PC2, fill=Site), colour ="black", pch=21, size=3.5)+
-  geom_segment(data = PCAloadings, aes(x = 0, y = 0, xend = (PC1*7),
+  geom_segment(data = PCAloadingsx, aes(x = 0, y = 0, xend = (PC1*7),
      yend = (PC2*7)), arrow = arrow(length = unit(1/2, "picas")),
      color = "black") + 
-  annotate ("text", x = (PCAloadings$PC1*8), y = (PCAloadings$PC2*8),
-     label = PCAloadings$Variables,size=3)+
+  geom_text(data=PCAloadingsx, aes(x = (PCAloadingsx$PC1*8), y = (PCAloadingsx$PC2*8),
+     label = PCAloadingsx$Variables), size=3)+
+  geom_point(data=faunax, aes(y=PC1, x=PC2, colour=category), alpha=0.8, pch=23, size=4)+
+    geom_point(data=humansx, aes(y=PC1, x=PC2, fill=Site), colour ="black", pch=21, size=3.5)+
   scale_fill_manual(values=c(cols), breaks=c(order))+
   scale_colour_manual(values=c(cols), breaks=c(order))+
   xlim(6,-6)+
@@ -242,14 +237,16 @@ S2D <- ggplot ()+
 S2D
 ```
 
-#4. Save Supplmentary Figure 1
+#4. Save Supplmentary Figure 2
 
 ```{r}
 library(ggpubr)
-Fig3 <- ggarrange(S2A, S2B, S2C, S2D,
-                    labels = c("A", "B","C", "D"),
+S2 <- ggarrange(S2C, S2D, S2A, S2B,
+                    labels = c("A", "B", "C", "D"),
                     ncol = 2, nrow = 2, widths = c(2, 2), legend="bottom", common.legend = TRUE)
-Fig3
-ggsave(here('figures','SupplementaryFig2.svg'), width = 17.8, height = 17.8, dpi = 300, units = "cm", device='svg')
+S2
+ggsave(here('figures','SupplementaryFig2.svg'), width = 17.8, height = 17.9, dpi = 300, units = "cm", device='svg')
 ```
-```
+
+
+
