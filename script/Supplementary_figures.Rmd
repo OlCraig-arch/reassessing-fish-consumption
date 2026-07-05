@@ -1,0 +1,331 @@
+---
+title: "Supplementary figures for Reassessing prehistoric fish consumption"
+author: "OEC"
+date: "2026-07-04"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+Combined script producing the manuscript's two supplementary figures:
+Supplementary Figure 1 (CSIA quality-control/mass-balance checks) and
+Supplementary Figure 2 (PCA on normalised and non-normalised amino acid
+values). Consolidated from Supplementary_figure1.Rmd and
+Supplementary_figure2.Rmd; see Figures_2_3_4_5_6.Rmd for the main manuscript
+figures.
+
+#1. Load packages and colour palette
+
+```{r, echo=FALSE}
+library(dplyr)
+library(ggplot2)
+library(data.table)
+library(tidyr)
+library(stringr)
+library(Hmisc)
+library(ggpubr)
+library(googlesheets4)
+library(here)
+source(here('script','colors.R'))
+```
+
+#2. Load data
+
+```{r}
+Data  <- read.csv(here('data','Dataset_S1.csv'), fileEncoding = "macintosh")
+Data  <- Data %>% filter(!is.na(Sample_ID))  # drop trailing blank rows
+```
+
+#3. Supplementary Figure 1 - CSIA quality control
+
+QC check the CSIA data by plotting Pro against Hyp for each isotope, and check
+quality control through estimated mass balance against observed bulk values.
+
+```{r}
+S1A <- ggplot(data=Data, aes(y=hyp_d15N, x=pro_d15N))+
+  labs(x=expression(delta^{15}*N[Pro]*"(‰)"), y=expression(delta^{15}*N[Hyp]*"(‰)"))+
+  scale_x_continuous(position="bottom", limits=c(5,25))+
+  scale_y_continuous(position = "left",limits=c(5,25))+
+  geom_errorbar(aes(ymin=hyp_d15N-hyp_d15Nstdev, ymax=hyp_d15N+hyp_d15Nstdev), linewidth = 0.2, width=0.2)+
+  geom_errorbar(aes(xmin=pro_d15N-pro_d15Nstdev, xmax=pro_d15N+pro_d15Nstdev), linewidth = 0.2, width=0.2)+
+  geom_point(colour="black", fill= ref_cols[["phytoplankton"]], alpha=0.5, pch=21, size=2)+
+  geom_abline(intercept=c(0), slope= 1, linetype="solid")+
+  theme_bw() + theme(panel.grid = element_blank())+
+  coord_fixed(ratio = 1)
+S1A
+```
+
+```{r}
+S1B <- ggplot(data=Data, aes(y=hyp_d13C, x=pro_d13C))+
+  labs(x=expression(delta^{13}*C[Pro]*"(‰)"), y=expression(delta^{13}*C[Hyp]*"(‰)"))+
+  scale_x_continuous(position="bottom", limits=c(-24,-7))+
+  scale_y_continuous(position = "left",limits=c(-24,-7))+
+  geom_point(colour="black", fill= ref_cols[["red algae"]], alpha=0.5, pch=21, size=2)+
+  geom_errorbar(aes(ymin=hyp_d13C-hyp_d13C_err, ymax=hyp_d13C+hyp_d13C_err), linewidth = 0.2, width=0.2)+
+   geom_errorbar(aes(xmin=pro_d13C-pro_d13C_err, xmax=pro_d13C+pro_d13C_err), linewidth = 0.2, width=0.2)+
+  geom_abline(intercept=c(0), slope= 1, linetype="solid")+
+  theme_bw() + theme(panel.grid = element_blank())+
+  coord_fixed(ratio = 1)
+S1B
+```
+
+```{r}
+#QC1 d15N mass balance
+S1C <- ggplot(data=Data, aes(y=d15N_est, x=d15N))+
+  labs(x=expression(delta^{15}*N[OBS]*"(‰)"), y=expression(delta^{15}*N[EST]*"(‰)"))+
+  scale_x_continuous(position="bottom", limits=c(5,25))+
+  scale_y_continuous(position = "left",limits=c(5,25))+
+  geom_point(colour="black", fill= ref_cols[["phytoplankton"]], alpha=0.5, pch=21, size=2)+
+  geom_abline(intercept=c(0), slope= 1, linetype="solid")+
+  theme_bw() + theme(panel.grid = element_blank())+
+  coord_fixed(ratio = 1)
+S1C
+```
+
+```{r}
+#QC2 d13C mass balance
+S1D <- ggplot(data=Data, aes(y=d13C_est, x=d13C))+
+  labs(x=expression(delta^{13}*C[OBS]*"(‰)"), y=expression(delta^{13}*C[EST]*"(‰)"))+
+  scale_x_continuous(position="bottom", limits=c(-25,-5))+
+  scale_y_continuous(position = "left",limits=c(-25,-5))+
+  geom_point(colour="black", fill= ref_cols[["red algae"]], alpha=0.5, pch=21, size=2)+
+  geom_abline(intercept=c(0), slope= 1, linetype="solid")+
+  theme_bw() + theme(panel.grid = element_blank())+
+  coord_fixed(ratio = 1)
+S1D
+```
+
+Save Supplementary Figure 1
+
+```{r}
+FigS1 <- ggarrange(S1A, S1B, S1C, S1D,
+                    labels = c("A", "B","C", "D"),
+                    ncol = 2, nrow = 2, widths = c(2, 2), legend="none")
+FigS1
+ggsave(here('figures','SupplementaryFig1.svg'), width = 17.8, height = 17.8, dpi = 300, units = "cm", device='svg')
+# Submission-ready vector PDF (Journal of Archaeological Science/Elsevier accepts EPS or PDF
+# for vector line-art figures; cairo_pdf is needed for correct rendering of the delta/permil
+# Unicode symbols used in the axis labels).
+ggsave(here('figures','SupplementaryFig1.pdf'), width = 17.8, height = 17.8, dpi = 300, units = "cm", device = cairo_pdf)
+```
+
+Correlation coefficients for the QC panels above.
+
+```{r}
+QC1corr <- cor(Data$pro_d13C, Data$hyp_d13C, method = 'pearson')
+QC2corr <- cor(Data$pro_d15N, Data$hyp_d15N, method = 'pearson')
+QC3corr <- cor(Data$d13C_est, Data$d13C, method = 'pearson')
+QC4corr <- cor(Data$d15N_est, Data$d15N, method = 'pearson')
+QC1corr
+QC2corr
+QC3corr
+QC4corr
+```
+
+#4. Supplementary Figure 2 - PCA on amino acid values
+
+Site and faunal-category colours come from script/colors.R (source()'d above):
+`combined_cols` / `combined_order` cover both fauna categories and human sites,
+since both appear together in these PCA panels (fauna coloured by category,
+humans filled by Site).
+
+##4a. PCA on all samples and 10 amino acids, normalised to row mean
+
+```{r}
+Sam_N <- Data %>%  select(Site, Sample_ID,category, group, ala_d15N, ser_d15N, asp_d15N, glu_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N)#drop d15N_Ile as missing values
+Sam_N  <- na.omit(Sam_N)
+#Create a new coloumn containing the row mean of the key amino acid for each row.
+Sam_N  <- Sam_N  %>% rowwise() %>% mutate(row_mean = mean(c(ala_d15N, asp_d15N, glu_d15N, ser_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N)))#
+#Subtract the row mean from each of the row values to normalize
+Sam_N  <- Sam_N  %>% rowwise() %>% mutate(across(c(ala_d15N, asp_d15N, glu_d15N, ser_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N), ~ .x - row_mean))
+```
+
+```{r}
+Sam_C <- Data %>%  select(Site, Sample_ID, category, group, ala_d13C, asp_d13C, ser_d13C, glu_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)#drop d15N_Ile as missing values
+Sam_C <- na.omit(Sam_C)
+#Create a new coloumn containing the row mean of the key amino acid for each row.
+Sam_C  <- Sam_C  %>% rowwise() %>% mutate(row_mean = mean(c(ala_d13C, asp_d13C, ser_d13C, glu_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)))#
+#Subtract the row mean from each of the row values to normalize
+Sam_C  <- Sam_C  %>% rowwise() %>% mutate(across(c(ala_d13C, asp_d13C, glu_d13C, ser_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C), ~ .x - row_mean))
+```
+
+Carbon
+
+```{r}
+#extract the amino acid values
+PCA_C <- Sam_C %>%  select(ala_d13C, asp_d13C, glu_d13C, ser_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)
+PCA <- prcomp(PCA_C, scale. = TRUE)
+
+# Calculate the percentage of variance explained by each linear discriminant
+percent_variance_explained <- PCA$sdev^2 / sum(PCA$sdev^2) * 100
+pc1_label <- paste0("PC 1 (", round(percent_variance_explained[1], 2), "%)")
+pc2_label <- paste0("PC 2 (", round(percent_variance_explained[2], 2), "%)")
+
+# Extract PC axes for plotting
+PCAvalues_C <- data.frame(Site = Sam_C$Site, group = Sam_C$group, category = Sam_C$category, PCA$x)
+humans <-filter(PCAvalues_C, group == "Human")
+fauna <-filter(PCAvalues_C, group == "Fauna")
+
+# Extract loadings of the variables
+PCAloadings <- data.frame(Variables = rownames(PCA$rotation), PCA$rotation)
+
+# Visualise the PCA
+S2A <- ggplot ()+
+  geom_point(data=fauna, aes(y=PC1, x=PC2, colour=category), pch=23, size=4)+
+    geom_point(data=humans, aes(y=PC1, x=PC2, fill=Site), alpha=0.8, colour="black", pch=21, size=3.5)+
+  geom_segment(data = PCAloadings, aes(x = 0, y = 0, xend = (PC1*7),
+     yend = (PC2*7)), arrow = arrow(length = unit(1/2, "picas")),
+     color = "black") +
+  annotate ("text", x = (PCAloadings$PC1*8), y = (PCAloadings$PC2*8),
+     label = PCAloadings$Variables,size=3)+
+  scale_fill_manual(values=combined_cols, breaks=combined_order)+
+  scale_colour_manual(values=combined_cols, breaks=combined_order)+
+  guides(colour = "none")+  # keep only the Site (fill) legend - avoids the combined legend overflowing the figure width
+  xlim(6,-6)+
+ ylim(6,-6)+
+  labs(title = "", x = pc1_label, y = pc2_label) +
+  theme_bw () +
+  coord_fixed (ratio = 1)
+S2A
+```
+
+Nitrogen
+
+```{r}
+#extract the amino acid values
+PCA_N <- Sam_N %>%  select(ala_d15N, ser_d15N, asp_d15N, glu_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N)
+PCA <- prcomp(PCA_N, scale. = TRUE)
+
+# Calculate the percentage of variance explained by each linear discriminant
+percent_variance_explained <- PCA$sdev^2 / sum(PCA$sdev^2) * 100
+pc1_label <- paste0("PC 1 (", round(percent_variance_explained[1], 2), "%)")
+pc2_label <- paste0("PC 2 (", round(percent_variance_explained[2], 2), "%)")
+
+# Extract PC axes for plotting
+PCAvalues_N <- data.frame(Site = Sam_N$Site, group = Sam_N$group, category = Sam_N$category, PCA$x)
+humans <-filter(PCAvalues_N, group == "Human")
+fauna <-filter(PCAvalues_N, group == "Fauna")
+
+# Extract loadings of the variables
+PCAloadings <- data.frame(Variables = rownames(PCA$rotation), PCA$rotation)
+
+# Visualise the PCA
+S2B <- ggplot ()+
+  geom_point(data=fauna, aes(y=PC1, x=PC2, colour=category), pch=23, size=4)+
+    geom_point(data=humans, aes(y=PC1, x=PC2, fill=Site), alpha=0.8, colour ="black", pch=21, size=3.5)+
+  geom_segment(data = PCAloadings, aes(x = 0, y = 0, xend = (PC1*7),
+     yend = (PC2*7)), arrow = arrow(length = unit(1/2, "picas")),
+     color = "black") +
+  annotate ("text", x = (PCAloadings$PC1*8), y = (PCAloadings$PC2*8),
+     label = PCAloadings$Variables,size=3)+
+  scale_fill_manual(values=combined_cols, breaks=combined_order)+
+  scale_colour_manual(values=combined_cols, breaks=combined_order)+
+  guides(colour = "none")+  # keep only the Site (fill) legend - avoids the combined legend overflowing the figure width
+  xlim(6,-6)+
+ ylim(6,-6)+
+  labs(title = "", x = pc1_label, y = pc2_label) +
+  theme_bw() + theme(panel.grid = element_blank()) +
+  coord_fixed (ratio = 1)
+S2B
+```
+
+##4b. PCA on all samples and 10 amino acids, without normalisation
+
+```{r}
+Sam_Nx <- Data %>%  select(Site, Sample_ID,category, group, ala_d15N, ser_d15N, asp_d15N, glu_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N)#drop d15N_Ile as missing values
+Sam_Nx  <- na.omit(Sam_Nx)
+Sam_Cx <- Data %>%  select(Site, Sample_ID, category, group, ala_d13C, asp_d13C, ser_d13C, glu_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)#drop d15N_Ile as missing values
+Sam_Cx <- na.omit(Sam_Cx)
+```
+
+Carbon
+
+```{r}
+#extract the amino acid values
+PCA_Cx<- Sam_Cx %>%  select(ala_d13C, asp_d13C, glu_d13C, ser_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)
+PCAx <- prcomp(PCA_Cx, scale. = TRUE)
+
+# Calculate the percentage of variance explained by each linear discriminant
+percent_variance_explained <- PCAx$sdev^2 / sum(PCAx$sdev^2) * 100
+pc1_label <- paste0("PC 1 (", round(percent_variance_explained[1], 2), "%)")
+pc2_label <- paste0("PC 2 (", round(percent_variance_explained[2], 2), "%)")
+
+# Extract PC axes for plotting
+PCAvalues_Cx <- data.frame(Site = Sam_C$Site, group = Sam_Cx$group, category = Sam_Cx$category, PCAx$x)
+humansx <-filter(PCAvalues_Cx, group == "Human")
+faunax <-filter(PCAvalues_Cx, group == "Fauna")
+
+# Extract loadings of the variables
+PCAloadingsx <- data.frame(Variables = rownames(PCAx$rotation), PCAx$rotation)
+
+# Visualise the PCA
+S2C <- ggplot ()+
+  geom_point(data=faunax, aes(y=PC1, x=PC2, colour=category), pch=23, size=4)+
+    geom_point(data=humansx, aes(y=PC1, x=PC2, fill=Site), alpha=0.8, colour="black", pch=21, size=3.5)+
+  geom_segment(data = PCAloadingsx, aes(x = 0, y = 0, xend = (PC1*7),
+     yend = (PC2*7)), arrow = arrow(length = unit(1/2, "picas")),
+     color = "black") +
+  annotate ("text", x = (PCAloadingsx$PC1*8), y = (PCAloadingsx$PC2*8),
+     label = PCAloadingsx$Variables,size=3)+
+  scale_fill_manual(values=combined_cols, breaks=combined_order)+
+  scale_colour_manual(values=combined_cols, breaks=combined_order)+
+  guides(colour = "none")+  # keep only the Site (fill) legend - avoids the combined legend overflowing the figure width
+  xlim(6,-6)+
+ ylim(6,-6)+
+  labs(title = "", x = pc1_label, y = pc2_label) +
+  theme_bw () +
+  coord_fixed (ratio = 1)
+S2C
+```
+
+Nitrogen
+
+```{r}
+#extract the amino acid values
+PCA_Nx<- Sam_Nx %>%  select(ala_d15N, asp_d15N, ser_d15N, glu_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N)
+PCAx <- prcomp(PCA_Nx, scale. = TRUE)
+
+# Calculate the percentage of variance explained by each linear discriminant
+percent_variance_explained <- PCAx$sdev^2 / sum(PCAx$sdev^2) * 100
+pc1_label <- paste0("PC 1 (", round(percent_variance_explained[1], 2), "%)")
+pc2_label <- paste0("PC 2 (", round(percent_variance_explained[2], 2), "%)")
+
+# Extract PC axes for plotting
+PCAvalues_Nx <- data.frame(Site = Sam_Nx$Site, group = Sam_Nx$group, category = Sam_Nx$category, PCAx$x)
+humansx <-filter(PCAvalues_Nx, group == "Human")
+faunax <-filter(PCAvalues_Nx, group == "Fauna")
+
+# Extract loadings of the variables
+PCAloadingsx <- data.frame(Variables = rownames(PCAx$rotation), PCAx$rotation)
+
+# Visualise the PCA
+S2D <- ggplot ()+
+  geom_segment(data = PCAloadingsx, aes(x = 0, y = 0, xend = (PC1*7),
+     yend = (PC2*7)), arrow = arrow(length = unit(1/2, "picas")),
+     color = "black") +
+  geom_text(data=PCAloadingsx, aes(x = (PCAloadingsx$PC1*8), y = (PCAloadingsx$PC2*8),
+     label = PCAloadingsx$Variables), size=3)+
+  geom_point(data=faunax, aes(y=PC1, x=PC2, colour=category), alpha=0.8, pch=23, size=4)+
+    geom_point(data=humansx, aes(y=PC1, x=PC2, fill=Site), colour ="black", pch=21, size=3.5)+
+  scale_fill_manual(values=combined_cols, breaks=combined_order)+
+  scale_colour_manual(values=combined_cols, breaks=combined_order)+
+  guides(colour = "none")+  # keep only the Site (fill) legend - avoids the combined legend overflowing the figure width
+  xlim(6,-6)+
+ ylim(6,-6)+
+  labs(title = "", x = pc1_label, y = pc2_label) +
+  theme_bw() + theme(panel.grid = element_blank()) +
+  coord_fixed (ratio = 1)
+S2D
+```
+
+Save Supplementary Figure 2
+
+```{r}
+S2 <- ggarrange(S2C, S2D, S2A, S2B,
+                    labels = c("A", "B", "C", "D"),
+                    ncol = 2, nrow = 2, widths = c(2, 2), legend="bottom", common.legend = TRUE)
+S2
+ggsave(here('figures','SupplementaryFig2.svg'), width = 17.8, height = 17.9, dpi = 300, units = "cm", device='svg')
+ggsave(here('figures','SupplementaryFig2.pdf'), width = 17.8, height = 17.9, dpi = 300, units = "cm", device = cairo_pdf)
+```

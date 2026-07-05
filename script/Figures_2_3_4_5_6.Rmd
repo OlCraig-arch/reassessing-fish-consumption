@@ -1,0 +1,818 @@
+---
+title: "Figures 2, 3, 4, 5 and 6 for Reassessing prehistoric fish consumption"
+author: "OEC"
+date: "2026-07-04"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+
+#1. Load packages and colour palette
+
+```{r, echo=FALSE}
+library(dplyr)
+library(ggplot2)
+library(data.table)
+library(tidyr)
+library(stringr)
+library(Hmisc)
+library(ggpubr)
+library(googlesheets4)
+library(here)
+source(here('script','colors.R'))
+set.seed(1)  # reproducible geom_text_repel label placement
+```
+
+#2. Load data
+
+```{r}
+Data  <- read.csv(here('data','Dataset_S1.csv'), fileEncoding = "macintosh")
+Data  <- Data %>% filter(!is.na(Sample_ID))  # drop trailing blank rows
+humans <- filter(Data, group == "Human")
+fauna <- filter(Data, group == "Fauna")
+```
+
+#3. Create indices for Fig2/Fig3
+
+```{r}
+fauna <-fauna %>% rowwise() %>% mutate(valphe_13C = (c(val_d13C - phe_d13C)))
+fauna <-fauna %>% rowwise() %>% mutate(lysphe_15N = (c(lys_d15N - phe_d15N)))
+fauna <-fauna %>% rowwise() %>% mutate(gluphe_15N = (c(glu_d15N - phe_d15N)))
+humans <-humans %>% rowwise() %>% mutate(valphe_13C = (c(val_d13C - phe_d13C)))
+humans <-humans %>% rowwise() %>% mutate(lysphe_15N = (c(lys_d15N - phe_d15N)))
+humans <-humans %>% rowwise() %>% mutate(gluphe_15N = (c(glu_d15N - phe_d15N)))
+```
+
+Site and faunal-category colours come from script/colors.R (source()'d above):
+`category_cols` (fauna-only panels, Fig2a-d) and `combined_cols`/`combined_order`
+(panels showing both fauna categories and human sites, Fig3a-d).
+
+#4. Fig2a Bulk isotope values of fauna
+
+```{r}
+library(ggrepel)
+Fig2a <-ggplot()+
+  labs(y=expression(delta^{15}*N[collagen]*"(‰)"), x=expression(delta^{13}*C[collagen]*"(‰)"))+
+  scale_x_continuous(position="bottom", limits=c(-25,-5))+
+  scale_y_continuous(position = "left", limits=c(0,20))+
+ geom_point(data=fauna, aes(y=d15N, x=d13C, fill=category), colour="black", pch=23, alpha=0.6, size=4)+
+  geom_text_repel(data=fauna, aes(y=d15N, x=d13C, label=common_name), size=2.1,
+                  seed=1, max.overlaps=Inf, box.padding=0.5, point.padding=0.3,
+                  force=3, force_pull=0.5, max.time=2, max.iter=1e5,
+                  min.segment.length=Inf, segment.size=0.2)+  # never draw a leader line - just place the label near its point
+  scale_fill_manual(values=category_cols, breaks=names(category_cols))+
+    theme_bw() + theme(panel.grid = element_blank())+
+  coord_fixed(ratio = 1)
+Fig2a
+```
+
+#5. Fig2b d15N_Glu against d15N_Phe for fauna
+
+```{r}
+  Fig2b <-ggplot() +
+  labs(x=expression(delta^{15}*N[Phe]*"(‰)"), y=expression(delta^{15}*N[Glu]*"(‰)"))+
+  scale_x_continuous(position="bottom", limits=c(0,20))+
+  scale_y_continuous(position = "left",limits=c(0,40))+
+  geom_point(data=fauna, aes(y=glu_d15N, x=phe_d15N, fill = category),
+  colour ="black", pch=23, alpha=0.6, size=4)+
+  geom_text_repel(data=fauna, aes(y=glu_d15N, x=phe_d15N, label=common_name), size=2.1,
+                  seed=1, max.overlaps=Inf, box.padding=0.35, point.padding=0.3,
+                  # force_pull raised (0.5 -> 2) relative to force so repel can't drag a
+                  # label far from its own point (e.g. "coati") just to dodge a neighbour -
+                  # ggrepel has no direct max-segment-length option, so this ratio is the
+                  # practical equivalent, capping how far any label is allowed to travel.
+                  force=3, force_pull=2, max.time=2, max.iter=1e5,
+                  min.segment.length=Inf, segment.size=0.2)+  # never draw a leader line - just place the label near its point
+  annotate("text", label = "T1", x = 7 , y = 0, size = 3, colour = "black",angle = 25)+
+  annotate("text", label = "T2", x = 0 , y = 0, size = 3, colour = "black",angle = 25)+
+  annotate("text", label = "T3", x = 0 , y = 6, size = 3, colour = "black",angle = 25)+
+  annotate("text", label = "M2", x = 0 , y = 10.2, size = 3, colour = "Blue",angle = 25)+
+  annotate("text", label = "M3", x = 0 , y = 17.3, size = 3, colour = "Blue",angle = 25)+
+  annotate("text", label = "M4", x = 0 , y = 24.5, size = 3, colour = "Blue",angle = 25)+
+  scale_fill_manual(values=category_cols, breaks=names(category_cols))+
+  guides(fill=guide_legend(title="Samples"))+
+  geom_abline(intercept=c(-6.6, 1, 8.6, 10.9, 18.5, 26.1), slope= 1, linetype="dashed", linewidth=0.2)+#Ramirez et al. values
+    theme_bw() + theme(panel.grid = element_blank())+
+coord_fixed(ratio = 0.5)
+Fig2b
+```
+
+#6. Fig2c d15NGlu_Phe against d13CVal-Phe for fauna
+
+```{r}
+Fig2c <-ggplot() +
+  geom_point(data=fauna, aes(y=gluphe_15N,  x=valphe_13C, fill=category), colour="black", pch=23,alpha=0.6, size=4)+
+  geom_text_repel(data=fauna, aes(y=gluphe_15N, x=valphe_13C, label=common_name), size=2.1,
+                  seed=1, max.overlaps=Inf, box.padding=0.5, point.padding=0.3,
+                  force=3, force_pull=0.5, max.time=2, max.iter=1e5,
+                  min.segment.length=Inf, segment.size=0.2)+  # never draw a leader line - just place the label near its point
+  labs(y=expression(Delta^{15}*N[Glx-Phe]*"(‰)"), x=expression(Delta^{13}*C[Val-Phe]*"(‰)"))+
+  scale_fill_manual(values=category_cols, breaks=names(category_cols))+
+  scale_x_continuous(position="bottom", limits=c(-5,8))+
+  scale_y_continuous(position = "left",limits=c(-5,30))+
+  theme_bw() + theme(panel.grid = element_blank())+
+  coord_fixed(ratio = 0.37)
+Fig2c
+```
+
+#7. Fig2d faunal remains fingerprinting
+
+Define reference ranges from primary producer databases.
+
+```{r}
+Ref_C <-  read.csv(here('data','C_fingerprinting.csv'))
+Ref_N <-  read.csv(here('data','N_fingerprinting.csv'))
+#select EAA
+Ref_C <- Ref_C %>%  dplyr::select(Group, Category, Code, ile_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)
+Ref_C <-Ref_C %>% rowwise() %>% mutate(valphe_13C = (c(val_d13C - phe_d13C)))
+Ref_C <- Ref_C %>% dplyr::filter(Category == 'C3_terrestrial_plant' | Category == 'phytoplankton' |Category == 'green algae' |Category == 'brown algae' |Category == 'red algae')
+Ref_C <- na.omit(Ref_C)
+
+
+Ref_N <- Ref_N %>%  dplyr::select(Group, Group1, Category, Code, phe_d15N, lys_d15N)
+Ref_N <-Ref_N %>% rowwise() %>% mutate(lysphe_15N = (c(lys_d15N - phe_d15N)))
+# Grouped by Group1 (Terrestrial plants / Phytoplankton / Macroalgae) rather
+# than the finer Category column - Group1 and Terrestrial plants are values
+# of Group1 itself, not Category (this folds red/green/brown algae together
+# under Macroalgae).
+# NOTE: N_fingerprinting.csv's "Code" column is keyed to Group1 (MA/Phyto/TP),
+# distinct from C_fingerprinting.csv's "Code" column, which is keyed to the
+# finer Category (used for Ref_C_labels below).
+Ref_N <- Ref_N %>% dplyr::filter(Group1 %in% c('Macroalgae', 'Phytoplankton', 'Terrestrial plants'))
+Ref_N <- na.omit(Ref_N) #
+
+# Short Code labels (e.g. "TP", "Phyto", "BA") for each reference category,
+# used to label the density curves directly in the Fig2d/Fig3d marginal
+# panel below instead of relying solely on the fill legend.
+#
+# find_exclusive_label_pos() places each label over a stretch of its own
+# curve where it is the tallest of all the overlapping categories (i.e. a
+# section of the distribution that isn't buried under a neighbour), rather
+# than at the raw median/peak, which for several of these categories falls
+# right in the middle of a heavily overlapping zone (see e.g. red algae/
+# phytoplankton/green algae/brown algae all overlapping around 0-4 permil).
+# For each category it finds the largest contiguous run of the shared grid
+# where that category's density exceeds every other category's, and labels
+# the point of highest density within that run. If a category is never the
+# tallest anywhere (fully masked by others), it falls back to its own peak.
+find_exclusive_label_pos <- function(data, value_col, group_col, grid) {
+  groups <- unique(data[[group_col]])
+  dens_mat <- sapply(groups, function(g) {
+    vals <- data[[value_col]][data[[group_col]] == g]
+    d <- density(vals)
+    approx(d$x, d$y, xout = grid, rule = 2)$y
+  })
+  dominant <- groups[max.col(dens_mat, ties.method = "first")]
+  out <- lapply(seq_along(groups), function(i) {
+    g <- groups[i]
+    idx <- which(dominant == g)
+    if (length(idx) == 0) {
+      # never the tallest curve anywhere - fall back to this category's own peak
+      x_pos <- grid[which.max(dens_mat[, i])]
+    } else {
+      runs <- split(idx, cumsum(c(1, diff(idx) != 1)))
+      best_run <- runs[[which.max(lengths(runs))]]
+      x_pos <- grid[best_run[which.max(dens_mat[best_run, i])]]
+    }
+    y_pos <- 0.5 * approx(grid, dens_mat[, i], xout = x_pos)$y
+    data.frame(group = g, peak_x = x_pos, peak_y = y_pos)
+  })
+  setNames(do.call(rbind, out), c(group_col, "peak_x", "peak_y"))
+}
+
+grid_C <- seq(-6, 9, length.out = 600)   # matches Ref_C_plot's display window
+Ref_C_labels <- find_exclusive_label_pos(Ref_C, "valphe_13C", "Category", grid_C) %>%
+  left_join(distinct(Ref_C, Category, Code), by = "Category")
+
+# Same idea for the y-axis (Nitrogen) marginal density, labelled by Group1's
+# own Code (MA/Phyto/TP).
+grid_N <- seq(-11, 6, length.out = 600)  # matches Ref_N_plot's display window
+Ref_N_labels <- find_exclusive_label_pos(Ref_N, "lysphe_15N", "Group1", grid_N) %>%
+  left_join(distinct(Ref_N, Group1, Code), by = "Group1")
+
+# Display-only copies of Ref_C/Ref_N, restricted to a window a little wider
+# than Fig2d_base's own axis limits (matching ggplot's default ~5% expansion
+# either side of -5/8 and -10/5). This keeps the density curves from being
+# dominated by a few far-outlying reference values, WITHOUT needing a second
+# coord_cartesian()/coord_flip() call on xdens/ydens - adding one of those
+# overrides the coordinate system axis_canvas() already set up to align xdens/
+# ydens with Fig2d_base, which was causing the two to drift out of alignment
+# (data appearing to sit outside the axes).
+Ref_C_plot <- Ref_C %>% dplyr::filter(valphe_13C >= -6, valphe_13C <= 9)
+Ref_N_plot <- Ref_N %>% dplyr::filter(lysphe_15N >= -11, lysphe_15N <= 6)
+```
+
+Reference producer category colours come from script/colors.R (`ref_cols` /
+`ref_group1_cols`).
+
+Make base plot for Fig2d/Fig3d.
+
+```{r}
+Fig2d_base <-ggplot() +
+  geom_point(data=fauna, aes(y=lysphe_15N,  x=valphe_13C, fill=category), colour="black", pch=23,alpha=0.6, size=4)+
+  geom_text_repel(data=fauna, aes(y=lysphe_15N, x=valphe_13C, label=common_name), size=2.1,
+                  seed=1, max.overlaps=Inf, box.padding=0.5, point.padding=0.3,
+                  force=3, force_pull=0.5, max.time=2, max.iter=1e5,
+                  min.segment.length=Inf, segment.size=0.2)+  # never draw a leader line - just place the label near its point
+  labs(y=expression(Delta^{15}*N[Lys-Phe]*"(‰)"), x=expression(Delta^{13}*C[Val-Phe]*"(‰)"))+
+   scale_fill_manual(values=category_cols, breaks=names(category_cols))+
+  scale_x_continuous(position="bottom", limits=c(-5,8))+
+  scale_y_continuous(position = "left",limits=c(-10,5))+
+  theme_bw() + theme(panel.grid = element_blank())+
+  # Legend suppressed here (rather than repositioned) - Fig2's final assembled
+  # figure already hides every panel's legend (legend="none" in the ggarrange
+  # below), and a legend baked into this composite couldn't be stripped by
+  # that outer setting the way it is for a plain ggplot panel, which is what
+  # caused the earlier "multiple legends" problem. Nothing is lost: the same
+  # category colours are already shown in Fig2a-c.
+  theme(legend.position = "none")+
+  coord_fixed(ratio = 0.87)
+Fig2d_base
+```
+
+Make the composite Fig2d/Fig3d "big D" plot (main panel + marginal densities).
+
+```{r}
+library (ggExtra)
+library(ggpubr)
+library(cowplot)
+# axis_canvas() already builds xdens/ydens on the exact coordinate system
+# needed to line up with Fig2d_base - adding a second coord_cartesian()/
+# coord_flip() call on top of that replaces that alignment rather than
+# combining with it, which causes the density curves to drift out of
+# alignment with the main panel. Instead, Ref_C_plot/Ref_N_plot (filtered
+# above) keep the curves from extending past the visible window, and
+# legend.position="none" keeps these marginal plots from contributing their
+# own (redundant) Category legend to the composite - Fig2d_base/Fig3d_base's
+# own legend, or the outer figure's shared legend, already conveys the same
+# colours.
+# Some category peaks sit very close together (e.g. phytoplankton and red
+# algae), so plain geom_text labels would overlap. geom_text_repel nudges
+# them apart automatically and draws a short leader line back to the true
+# peak when it has to move a label.
+xdens <- axis_canvas(Fig2d_base, axis = "x") +
+  geom_density(data= Ref_C_plot, aes(x = valphe_13C, fill = Category), alpha = 0.5, linewidth = 0.2) +
+  # geom_label_repel (rather than geom_text_repel) draws an opaque white box
+  # behind each label so it stands out against whichever curve(s) it sits on
+  # top of. The label's text/border colour is also mapped to Category (via
+  # scale_colour_manual(values=ref_cols), matching the curve fill colours) so
+  # it's unambiguous which curve each label belongs to even when several
+  # labels sit close together. direction="y" keeps each label's x fixed at
+  # its own median (peak_x), so repel can only slide labels vertically to
+  # dodge collisions - they stay centred within the range they're labelling
+  # instead of drifting sideways onto a neighbouring curve.
+  ggrepel::geom_label_repel(data = Ref_C_labels, aes(x = peak_x, y = peak_y, label = Code, colour = Category),
+            size = 2.2, fontface = "bold", seed = 1, direction = "y",
+            fill = "white", label.size = 0.35, label.padding = unit(0.1, "lines"),
+            force = 2, force_pull = 0.3,
+            min.segment.length = Inf, segment.size = 0.2, box.padding = 0.25) +
+  scale_fill_manual(values = ref_cols) +
+  scale_colour_manual(values = ref_cols) +
+  theme(legend.position = "none")
+ydens <- axis_canvas(Fig2d_base, axis = "y", coord_flip = TRUE) +
+  geom_density(data = Ref_N_plot, aes(x = lysphe_15N, fill = Group1), alpha = 0.5, linewidth = 0.2) +
+  # Same white-background + colour-matched-border fix as xdens above -
+  # pre-flip this keeps each label's peak_x (its true Nitrogen median) fixed,
+  # so post-flip it stays aligned with the correct point on Fig2d_base's
+  # y-axis instead of sliding onto a neighbouring range; only the
+  # density-height offset (post-flip: how far the label sits from the axis)
+  # is free to move.
+  ggrepel::geom_label_repel(data = Ref_N_labels, aes(x = peak_x, y = peak_y, label = Code, colour = Group1),
+            size = 2.2, fontface = "bold", seed = 1, direction = "y",
+            fill = "white", label.size = 0.35, label.padding = unit(0.1, "lines"),
+            force = 2, force_pull = 0.3,
+            min.segment.length = Inf, segment.size = 0.2, box.padding = 0.25) +
+  coord_flip() +
+  scale_fill_manual(values = ref_group1_cols) +
+  scale_colour_manual(values = ref_group1_cols) +
+  theme(legend.position = "none")
+# panel_d_scale: single knob controlling how much extra width/height Fig2d/Fig3d's
+# grid cell gets in the "Save Fig 2"/"Save Fig 3" chunks below, to offset the
+# margin strips' share of the composite - D's core plotted area works out to
+# panel_d_scale/(1+margin_frac) times A/B/C's size, so setting it to exactly
+# 1+margin_frac makes D's core panel match A/B/C's size precisely (confirmed
+# by pixel-measuring the rendered panel borders: at the old 1.35 value D's
+# core panel came out ~12% larger than A/B/C, not smaller).
+margin_frac <- 0.25  # relative size of the marginal density strip
+panel_d_scale <- 1 + margin_frac
+Fig2d <- insert_xaxis_grob(Fig2d_base, xdens, grid::unit(margin_frac, "null"), position = "top")
+Fig2d <- insert_yaxis_grob(Fig2d, ydens, grid::unit(margin_frac, "null"), position = "right")
+Fig2d <-ggdraw(Fig2d)
+Fig2d
+```
+
+#8. Save Fig2 (A-D)
+
+```{r}
+library(ggpubr)
+# Fig2d is a cowplot composite (main panel + marginal density strips on top/
+# right), so its core scatter area is smaller than a plain panel once
+# squeezed into the same grid cell as Fig2a-c. Arrange the bottom row and
+# the two rows separately so Fig2d's cell can be given extra width/height
+# (panel_d_scale, set above) that offsets what its margin strips take up,
+# making its plotted area match Fig2a/b/c.
+Fig2_top    <- ggarrange(Fig2a, Fig2b, ncol = 2, labels = c("A", "B"), legend = "none")
+Fig2_bottom <- ggarrange(Fig2c, Fig2d, ncol = 2, labels = c("C", "D"), legend = "none",
+                         widths = c(1, panel_d_scale))
+Fig2 <- ggarrange(Fig2_top, Fig2_bottom, nrow = 2, heights = c(1, panel_d_scale))
+Fig2
+# Growing the whole canvas by the same panel_d_scale factor (in both width and
+# height) keeps A, B, C and D in the same proportions throughout, giving D's
+# cell the extra room it needs without distorting the layout. The raw scaled
+# size (8.9 * (1 + panel_d_scale) = 20.9cm) exceeds Elsevier/JAS's 190mm
+# double-column maximum, so it's capped at 19cm here - since A/B/C/D are all
+# scaled down together by the same uniform factor, their relative proportions
+# (and absolute font sizes, which are set in points and unaffected by the
+# canvas size) stay identical; only the overall figure comes out ~9% smaller.
+fig2_side <- min(8.9 * (1 + panel_d_scale), 19)
+ggsave(here('figures','Fig2.svg'), width = fig2_side, height = fig2_side, dpi = 300, units = "cm", device='svg')
+# Submission-ready vector PDF (Journal of Archaeological Science/Elsevier accepts EPS or PDF
+# for vector line-art figures; cairo_pdf - rather than the default pdf() device - is needed
+# for correct rendering of the delta/permil Unicode symbols used in the axis labels).
+ggsave(here('figures','Fig2.pdf'), width = fig2_side, height = fig2_side, dpi = 300, units = "cm", device = cairo_pdf)
+```
+
+#9. Fig3a Bulk isotope values of humans
+
+```{r}
+Fig3a <-ggplot()+
+  labs(y=expression(delta^{15}*N[collagen]*"(‰)"), x=expression(delta^{13}*C[collagen]*"(‰)"))+
+  scale_x_continuous(position="bottom", limits=c(-25,-5))+
+  scale_y_continuous(position = "left", limits=c(0,20))+
+  geom_point(data=fauna, aes(y=d15N, x=d13C, colour=category), alpha=0.8, pch=23, size=4)+
+  geom_point(data=humans, aes(y=d15N, x=d13C, fill=Site), colour="black", pch=21, size=4)+
+   scale_fill_manual(values=combined_cols, breaks=combined_order)+
+  scale_colour_manual(values=combined_cols, breaks=combined_order)+
+  guides(colour = "none")+  # keep only the Site (fill) legend, drop the fauna-category (colour) one
+  theme_bw() + theme(panel.grid = element_blank())+
+  coord_fixed(ratio = 1)
+Fig3a
+```
+
+#10. Fig3b d15N Glu against d15N Phe for humans
+
+```{r}
+  Fig3b <-ggplot() +
+  labs(x=expression(delta^{15}*N[Phe]*"(‰)"), y=expression(delta^{15}*N[Glx]*"(‰)"))+
+  scale_x_continuous(position="bottom", limits=c(0,20))+
+  scale_y_continuous(position = "left",limits=c(0,40))+
+  geom_point(data=fauna, aes(y=glu_d15N, x=phe_d15N, colour=category), alpha=0.8, pch=23, size=4)+
+  geom_point(data=humans, aes(y=glu_d15N, x=phe_d15N, fill = Site), colour ="black", pch=21, size=3.5)+
+  annotate("text", label = "T1", x = 7 , y = 0, size = 3, colour = "black",angle = 25)+
+  annotate("text", label = "T2", x = 0 , y = 0, size = 3, colour = "black",angle = 25)+
+  annotate("text", label = "T3", x = 0 , y = 6, size = 3, colour = "black",angle = 25)+
+  annotate("text", label = "M2", x = 0 , y = 10.2, size = 3, colour = "Blue",angle = 25)+
+  annotate("text", label = "M3", x = 0 , y = 17.3, size = 3, colour = "Blue",angle = 25)+
+  annotate("text", label = "M4", x = 0 , y = 24.5, size = 3, colour = "Blue",angle = 25)+
+  scale_fill_manual(values=combined_cols, breaks=combined_order)+
+  scale_colour_manual(values=combined_cols, breaks=combined_order)+
+  guides(fill=guide_legend(title="Samples"), colour = "none")+  # keep only the Site (fill) legend
+  geom_abline(intercept=c(-6.6, 1, 8.6, 10.9, 18.5, 26.1), slope= 1, linetype="dashed", linewidth=0.2)+#Ramirez et al. values
+  theme_bw() + theme(panel.grid = element_blank())+
+coord_fixed(ratio = 0.5)
+Fig3b
+```
+
+#11. Fig3c Glxphe against Valphe for humans
+
+```{r}
+Fig3c <-ggplot() +
+  geom_point(data=fauna, aes(y=gluphe_15N,  x=valphe_13C, colour=category), alpha=0.8, pch=23, size=4)+
+  geom_point(data=humans, aes(y=gluphe_15N,  x=valphe_13C, fill=Site), colour="black", pch=21, size=4)+
+  labs(y=expression(Delta^{15}*N[Glx-Phe]*"(‰)"), x=expression(Delta^{13}*C[Val-Phe]*"(‰)"))+
+  scale_fill_manual(values=combined_cols, breaks=combined_order)+
+  scale_colour_manual(values=combined_cols, breaks=combined_order)+
+  guides(colour = "none")+  # keep only the Site (fill) legend
+  scale_x_continuous(position="bottom", limits=c(-5,8))+
+  scale_y_continuous(position = "left",limits=c(-5,30))+
+  theme_bw() + theme(panel.grid = element_blank())+
+  coord_fixed(ratio = 0.37)
+Fig3c
+```
+
+#12. Fig3d faunal remains fingerprinting (humans overlaid)
+
+```{r}
+Fig3d <-ggplot() +
+  geom_point(data=fauna, aes(y=lysphe_15N,  x=valphe_13C, colour=category), alpha=0.8, pch=23, size=4)+
+  geom_point(data=humans, aes(y=lysphe_15N,  x=valphe_13C, fill=Site), colour="black", pch=21, size=4)+
+  labs(y=expression(Delta^{15}*N[Lys-Phe]*"(‰)"), x=expression(Delta^{13}*C[Val-Phe]*"(‰)"))+
+ scale_fill_manual(values=combined_cols, breaks=combined_order)+
+  scale_colour_manual(values=combined_cols, breaks=combined_order)+
+  scale_x_continuous(position="bottom", limits=c(-5,8))+
+  scale_y_continuous(position = "left",limits=c(-10,5))+
+  theme_bw() + theme(panel.grid = element_blank())+
+  theme(legend.position = "none")+
+  coord_fixed(ratio = 0.87)
+Fig3d <- insert_xaxis_grob(Fig3d, xdens, grid::unit(margin_frac, "null"), position = "top")
+Fig3d <- insert_yaxis_grob(Fig3d, ydens, grid::unit(margin_frac, "null"), position = "right")
+Fig3d <-ggdraw(Fig3d)
+Fig3d
+```
+
+#13. Save Fig3 (A-D)
+
+```{r}
+library(ggpubr)
+
+Fig3 <- ggarrange(Fig3a, Fig3b, Fig3c, Fig3d, ncol = 2, nrow = 2, labels = c("A", "B", "C", "D"),
+                   widths = c(1, panel_d_scale), heights = c(1, panel_d_scale),
+                   legend = "bottom", common.legend = TRUE)
+Fig3
+# Capped at 19cm for the same reason as fig2_side above (Elsevier/JAS's 190mm
+# double-column maximum) - uniform scaling preserves proportions/font sizes.
+fig3_side <- min(8.9 * (1 + panel_d_scale), 19)
+ggsave(here('figures','Fig3.svg'), width = fig3_side, height = fig3_side, dpi = 300, units = "cm", device='svg')
+ggsave(here('figures','Fig3.pdf'), width = fig3_side, height = fig3_side, dpi = 300, units = "cm", device = cairo_pdf)
+```
+
+#14. Prepare EAA data for the MixSIAR mixing model (Fig4/Fig5)
+
+```{r}
+EAA <- Data %>%  dplyr::select(Site, Region, Sample_ID, category, common_name, Group, group, d34S,d13C,d15N, ile_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C, phe_d15N, lys_d15N)
+```
+
+Create a source data file for marine and terrestrial faunal references and
+find means and SDs (needed for multiple tracers rather than a 'raw' model).
+
+```{r}
+Sources <- EAA %>% subset(group =="Fauna")
+Sources <- Sources %>%filter(!common_name == "guinea pig" & !common_name == "armadillo"& !common_name == "coati")
+
+Source_means <- Sources %>% group_by(Group) %>% summarise (Meanile_d13C
+ = mean(ile_d13C), Meanleu_d13C  = mean(leu_d13C), Meanlys_d13C
+ = mean(lys_d13C), Meanval_d13C = mean(val_d13C), Meanphe_d13C = mean(phe_d13C), Meanphe_d15N = mean(phe_d15N), Meanlys_d15N = mean(lys_d15N), SDile_d13C = sd(ile_d13C), SDleu_d13C  = sd(leu_d13C), SDlys_d13C = sd(lys_d13C), SDval_d13C = sd(val_d13C), SDphe_d13C = sd(phe_d13C), SDphe_d15N = mean(phe_d13C), SDlys_d15N = mean(lys_d15N), n = n())
+
+write.csv (Source_means, here::here("mixingmodel", "Sources.csv"), row.names=FALSE)
+```
+
+```{r}
+Discr <- data.frame(
+  Source = c("marine_fauna", "terrestrial_fauna"),
+  Meanile_d13C = c(-0.7,-0.7),
+  Meanleu_d13C	=c(-0.3,-0.3),
+  Meanlys_d13C = c(0,0),#No data available
+  Meanval_d13C	=c (-0.1,-0.1),
+  Meanphe_d13C = c(0,0),
+  Meanphe_d15N = c(0.1,0.1),
+  Meanlys_d15N	=c (0.8,0.8),
+  SDile_d13C	= c(1.5,1.5),
+  SDleu_d13C = c(0.8,0.8),
+  SDlys_d13C	= c(0,0),#No data available
+  SDval_d13C = c(1.1,1.1),
+  SDphe_d13C = c(0.4,0.4),
+  SDphe_d15N	= c(0.2,0.2),
+  SDlys_d15N = c(0.4,0.4))
+write.csv (Discr, here::here("mixingmodel", "Discr.csv"), row.names=FALSE)
+```
+
+Create a consumer data file for human data.
+
+```{r}
+Humans <- EAA %>% subset(group =="Human")
+write.csv (Humans, here('mixingmodel','Humans.csv'), row.names=FALSE)
+```
+
+#15. Apply the MixSIAR model
+
+Load source data and consumer data.
+
+```{r}
+library(devtools)
+library(MixSIAR)
+
+#Load mixture data
+mix <- load_mix_data(filename=here('mixingmodel','Humans.csv'), iso_names=c("ile_d13C", "leu_d13C", "lys_d13C", "val_d13C", "phe_d13C", "phe_d15N", "lys_d15N"),
+                     factors="Sample_ID",
+                     fac_random=FALSE,
+                     fac_nested=FALSE,
+                     cont_effects=NULL)
+
+#Load source data
+source <- load_source_data(filename=here('mixingmodel','Sources.csv'),
+                           source_factors=NULL,
+                           conc_dep=FALSE,
+                           data_type="means",
+                           mix)
+#Load discrimination data including the offsets for the EAAs if required. Note d13C lysine does not have a value.
+discr <- load_discr_data(filename= here::here("mixingmodel", "Discr.csv"), mix)
+```
+
+Create the JAGS file and run the model (test, then the full "very long" run).
+
+```{r}
+model_filename <- "MixSIAR_model.txt"# Name of the JAGS model file
+resid_err <-FALSE
+process_err <-TRUE
+write_JAGS_model(model_filename, resid_err, process_err, mix, source)
+```
+
+```{r}
+jags.1 <- run_model(run="test", mix, source, discr, model_filename)
+```
+
+```{r}
+jags.1 <- run_model(run="very long", mix, source, discr, model_filename)
+```
+
+#16. Obtain model outputs and check for convergence
+
+```{r}
+output_options <- list(summary_save = TRUE,
+                       summary_name = "summary_final",
+                       sup_post = TRUE,
+                       plot_post_save_pdf = FALSE,
+                       plot_post_name = "posterior_density",
+                       sup_pairs = TRUE,
+                       plot_pairs_save_pdf = FALSE,
+                       plot_pairs_name = "pairs_plot",
+                       sup_xy = TRUE,
+                       plot_xy_save_pdf = FALSE,
+                       plot_xy_name = "xy_plot",
+                       gelman = TRUE,
+                       heidel = TRUE,
+                       geweke = TRUE,
+                       diag_save = TRUE,
+                       diag_name = "diagnostics",
+                       indiv_effect = FALSE,
+                       plot_post_save_png = FALSE,
+                       plot_pairs_save_png = FALSE,
+                       plot_xy_save_png = FALSE,
+                       diag_save_ggmcmc = FALSE,
+                       return_obj=TRUE)
+```
+
+Get posterior chains into one tidy data frame.
+
+```{r}
+library(R2jags)
+summary(jags.1)
+attach.jags(jags.1)
+```
+
+Run diagnostics and create a data frame with summary stats. Check the
+console output to make sure the model has converged.
+
+```{r}
+diag <- output_diagnostics(jags.1, mix, source, output_options)
+head(diag$gelman)
+df.stats <- output_stats(jags.1, mix, source, output_options)
+rownames(df.stats)
+df.stats <- as.data.frame(df.stats)
+diag
+```
+
+Add rownames to outputs and tidy up columns.
+
+```{r}
+df.stats <- cbind(Sample_category = rownames(df.stats), df.stats)
+rownames(df.stats) <- 1:nrow(df.stats)
+df.stats
+```
+
+```{r}
+library(tidyr)
+df.stats <- df.stats %>% separate_wider_delim (Sample_category, ".", names = c("number", "Sample_ID", "Category"))
+```
+
+Re-arrange data and combine with the original data set.
+
+```{r}
+library(janitor)
+marine <- df.stats %>% filter(Category %in% "marine_fauna")
+terrestrial <- df.stats %>% filter(Category %in% "terrestrial_fauna")
+
+All_humans <- Data %>% subset(group =="Human")
+
+Result_mix <- Data  %>% left_join (marine,
+           by = c("Sample_ID"), ) %>% left_join (terrestrial,
+           by = c("Sample_ID"), suffix = c("_marine", "_terrestrial"))
+Result_mix <-Result_mix %>% janitor::clean_names(case = "none")#use janitor funciton to clean nemes
+# Write DataFrame to a CSV file
+Result_mixM = as.matrix(Result_mix )
+write.csv(Result_mixM, here::here("mixingmodel", "Result_mix.csv"), row.names = FALSE)
+```
+
+Site colours for Fig4/Fig5 come from script/colors.R (`site_cols`/`site_order`)
+- these panels only encode human Site, not faunal category.
+
+#17. Fig4a % marine source AA against bulk carbon isotope values
+
+```{r}
+library(ggplot2)
+library(scales)
+library (grid)
+Fig4a <-ggplot(Result_mix) +
+  geom_errorbar(aes(y=d13C, x=Mean_marine, xmax=X95_percent_marine, xmin=X5_percent_marine), linewidth=0.2)+
+    geom_point(data= Result_mix, aes(y=d13C, x= X50_percent_marine, fill = Site), pch=21, size = 3, colour = "black")+
+  scale_fill_manual(values=site_cols, breaks=site_order)+
+  scale_x_continuous(labels = scales::percent_format(accuracy = 1))+
+  scale_y_continuous(position="left", limits=c(-25,-5))+
+  ylab (expression(delta^{13}*C[collagen]*"(‰)"))+
+  xlab ("% marine source AA")+
+  theme_bw() + theme(panel.grid = element_blank())+
+  coord_fixed(ratio = 0.05)
+Fig4a
+```
+
+#18. Fig4b % marine source AA against bulk nitrogen isotope values
+
+```{r}
+Fig4b <-ggplot(Result_mix) +
+  geom_errorbar(aes(y=d15N, x=Mean_marine, xmax=X95_percent_marine, xmin=X5_percent_marine),linewidth=0.2)+
+    geom_point(data= Result_mix, aes(y=d15N, x= X50_percent_marine, fill = Site), pch=21, size = 3, colour = "black")+
+  scale_fill_manual(values=site_cols, breaks=site_order)+
+  scale_x_continuous(labels = scales::percent_format(accuracy = 1))+
+  scale_y_continuous(position="left", limits=c(0,20))+
+  ylab (expression(delta^{15}*N[collagen]*"(‰)"))+
+  xlab ("% marine source AA")+
+  coord_fixed(ratio = 0.05)+
+  theme_bw() + theme(panel.grid = element_blank())
+Fig4b
+```
+
+#19. Derive trophic position from % marine mix (Ramirez et al. values)
+
+Derive the terrestrial beta value from herbivores, assuming they are TP2.
+
+```{r}
+T_herb <- Data %>%filter(category == "terrestrial_herbivore")
+T_herb <- T_herb %>%filter(!common_name == "guinea pig" & !common_name == "armadillo"& !common_name == "coati")
+T_herb <-  T_herb %>% rowwise() %>% mutate (beta = 7.6-(glu_d15N-phe_d15N) )
+beta_T = mean(T_herb$beta)
+sigma_beta_T = sd(T_herb$beta)
+beta_T
+sigma_beta_T
+```
+
+Calculate the uncertainties on trophic level estimates.
+
+```{r}
+# ---- Input Data ----
+# Measured values
+beta_M <- -3.3 #Marine beta value from  Ramirez et al.
+beta_T <- 6.6 #Terrestrial beta value from Ramirez et al.
+TDF <- 7.6  # Trophic discriminat factor from Ramirez
+
+# Standard deviations from Ramirez
+sigma_beta_M <- 1.8 # marine beta uncertainty
+sigma_beta_T <- 3.4  # terrestrial beta uncertainty
+sigma_TDF <- 1.1 # TDF uncertainty from Neilsen
+
+# Partial derivatives, added to a new sheet
+Result_mix_TP <- Result_mix %>% rowwise() %>%
+mutate(dTP_dGlu = ((1/TDF)^2)*(glu_d15Nstdev^2))%>%mutate(dTP_dPhe=((-1/TDF)^2)*(phe_d15Nstdev^2))%>%mutate(dTP_dBeta=(((beta_M-beta_T)/TDF)^2)*(SD_marine^2))%>%mutate(dTP_dBeta_T=(((Mean_terrestrial)/TDF)^2)*(sigma_beta_T^2))%>%mutate(dTP_dBeta_M=((Mean_marine/TDF)^2)*(sigma_beta_M^2))%>%mutate(dTP_sigma=(((-1/(TDF^2))*(glu_d15N-phe_d15N+((Mean_terrestrial)*beta_T)+(Mean_marine*beta_M)))^2)*(sigma_TDF^2))
+```
+
+```{r}
+# Calculate trophic position using Ramirez values and add the combined uncertainty
+Result_mix_TP_final <- Result_mix_TP %>%
+  rowwise() %>% mutate(Mix_TP = (((glu_d15N - phe_d15N) + (((Mean_marine)*beta_M) + ((Mean_terrestrial))*beta_T)) / TDF) + 1)%>% mutate(Mix_TP_sigma = (sqrt(dTP_dGlu + dTP_dPhe + dTP_dBeta +dTP_dBeta_T + dTP_dBeta_M + dTP_sigma)))
+```
+
+#20. Fig4c estimated trophic position against % marine source AA
+
+```{r}
+Fig4c <- ggplot(Result_mix_TP_final) +
+  geom_errorbar(aes(y=Mix_TP, x=Mean_marine, ymax=(Mix_TP+Mix_TP_sigma), ymin=(Mix_TP-Mix_TP_sigma)), linewidth=0.2)+
+  geom_errorbarh(aes(y=Mix_TP, x=Mean_marine, xmax=(Mean_marine+SD_marine),xmin=(Mean_marine-SD_marine)), linewidth=0.2)+
+    geom_point(data= Result_mix_TP_final, aes(y=Mix_TP, x= Mean_marine, fill = Site), pch=21, size = 3, colour = "black")+
+  scale_fill_manual(values=site_cols, breaks=site_order)+
+  scale_x_continuous(labels = scales::percent_format(accuracy = 1))+
+  ylab ("Estimated trophic positon - 'BetaMix'")+
+  xlab ("% marine source AA_MixSIAR")+
+  geom_hline (yintercept=c(2.04,2.57), linewidth=0.2, colour="red", linetype = "dashed")+
+  coord_fixed(ratio = 0.3)+
+  theme_bw() + theme(panel.grid = element_blank())
+Fig4c
+```
+
+#21. Save Fig4 (A-C)
+
+```{r}
+library(ggpubr)
+Fig4 <- ggarrange (ggarrange(Fig4a, Fig4b, ncol=2, labels = c("A","B"), common.legend = TRUE, legend="none" ), Fig4c, labels = c("", "C"), nrow=2, legend="bottom", common.legend = TRUE)
+Fig4
+
+ggsave(here('figures','Fig4.svg'), width = 17.8, height = 17.8, dpi = 300, units = "cm", device='svg')
+ggsave(here('figures','Fig4.pdf'), width = 17.8, height = 17.8, dpi = 300, units = "cm", device = cairo_pdf)
+```
+
+#22. Fig5a percent marine source AA against d34S
+
+```{r}
+Fig5a <- ggplot(Result_mix_TP_final) +
+  geom_errorbar(aes(x=d34S, y=Mean_marine, ymax=X95_percent_marine, ymin=X5_percent_marine), linewidth=0.2)+
+  geom_point(aes(x=d34S, y=X50_percent_marine, fill=Site), pch=21, size=3, colour="black")+
+  scale_fill_manual(values=site_cols, breaks=site_order)+
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1))+
+  ylab("% marine source AA")+
+  xlab(expression(delta^{34}*S[collagen]*"(‰)"))+
+  scale_x_continuous(position="bottom", limits=c(-5,15))+
+  theme_bw() + theme(panel.grid = element_blank())+
+  theme(legend.position="bottom", aspect.ratio = 1)
+Fig5a
+```
+
+#23. Fig5b estimated trophic position against d34S
+
+```{r}
+Fig5b <-ggplot(Result_mix_TP_final) +
+  geom_errorbar(aes(y=Mix_TP, x=d34S, ymax=(Mix_TP+Mix_TP_sigma), ymin=(Mix_TP-Mix_TP_sigma)), linewidth=0.2)+
+    geom_point(data= Result_mix_TP_final, aes(y=Mix_TP, x= d34S, fill =Site), pch=21, size = 3, colour = "black")+
+  scale_fill_manual(values=site_cols, breaks=site_order)+
+  ylab ("Estimated TP")+
+  xlab (expression(delta^{34}*S[collagen]*"(‰)"))+
+  scale_x_continuous(position="bottom", limits=c(-5,15))+
+  theme_bw() + theme(panel.grid = element_blank())+
+  theme(legend.position="bottom", aspect.ratio = 1)
+Fig5b
+```
+
+#24. Save Fig5 (A-B)
+
+```{r}
+Fig5 <- ggarrange(Fig5a, Fig5b, labels = c("A", "B"), ncol = 2, common.legend = TRUE, legend = "bottom")
+Fig5
+ggsave(here('figures','Fig5.svg'), width = 17.8, height = 8.9, dpi = 300, units = "cm", device='svg')
+ggsave(here('figures','Fig5.pdf'), width = 17.8, height = 8.9, dpi = 300, units = "cm", device = cairo_pdf)
+```
+
+Is there a correlation between d34S and % marine consumption, by site? Pooling all
+sites together gives essentially no correlation (r ~ 0, Fig5a) - but this masks a
+positive within-site relationship at three of the four sites, because each site sits
+in its own d34S/%marine cluster (Jab II close to 100% marine with little d34S spread;
+Moraes/Piaçaguera/Morro do Ouro spanning a wider range) - pooling erases the trend
+that holds *within* a site.
+
+```{r}
+humans_mix <- Result_mix_TP_final %>% filter(group == "Human", !is.na(Mean_marine), !is.na(d34S))
+d34S_marine_by_site <- humans_mix %>% group_by(Site) %>% summarise(
+  n = n(),
+  r = ifelse(n() >= 3, cor(d34S, Mean_marine, method = "pearson"), NA),
+  p = ifelse(n() >= 3, cor.test(d34S, Mean_marine, method = "pearson")$p.value, NA)
+)
+d34S_marine_by_site
+cor.test(humans_mix$d34S, humans_mix$Mean_marine, method = "pearson")  # pooled, for comparison
+```
+
+#25. Fig6 - compound specific isotope analysis of AMD cod (carbon fingerprinting)
+
+
+```{r}
+Fig6a <-ggplot()+
+  labs(y=expression(delta^{15}*N[Gly]*"(‰)"), x=expression(delta^{15}*N[Phe]*"(‰)"))+
+  scale_x_continuous(position="bottom", limits=c(0,20))+
+  scale_y_continuous(position = "left", limits=c(0,20))+
+  geom_point(data=fauna, aes(y=gly_d15N, x=phe_d15N, fill=category), colour="black", alpha=0.8, pch=23, size=4)+
+  geom_point(data=humans, aes(y=gly_d15N, x=phe_d15N, fill=Site), colour="black",  alpha=0.8, pch=21, size=4)+
+  # common_name labels dropped here (overplotting at n=this density) - see Fig2a for the labelled version
+  scale_fill_manual(values=combined_cols, breaks=combined_order)+
+    theme_bw() + theme(panel.grid = element_blank())+
+  coord_fixed(ratio = 1)
+Fig6a
+```
+
+```{r}
+Fig6b <-ggplot()+
+  labs(y=expression(delta^{15}*N[Gly]*"(‰)"), x=expression(delta^{15}*N[collagen]*"(‰)"))+
+  scale_x_continuous(position="bottom", limits=c(0,20))+
+  scale_y_continuous(position = "left", limits=c(0,20))+
+ geom_point(data=fauna, aes(y=gly_d15N, x=d15N, fill=category), colour="black", alpha=0.8, pch=23, size=4)+
+  geom_point(data=humans, aes(y=gly_d15N, x=d15N, fill=Site), colour="black",  alpha=0.8, pch=21, size=4)+
+  scale_fill_manual(values=combined_cols, breaks=combined_order)+
+    theme_bw() + theme(panel.grid = element_blank())+
+  coord_fixed(ratio = 1)
+Fig6b
+```
+
+```{r}
+Fig6c <-ggplot()+
+  labs(y=expression(delta^{15}*N[Gly]*"(‰)"), x=expression(delta^{15}*N[Glx]*"(‰)"))+
+  scale_x_continuous(position="bottom", limits=c(0,30))+
+  scale_y_continuous(position = "left", limits=c(0,20))+
+ geom_point(data=fauna, aes(y=gly_d15N, x=glu_d15N, fill=category), colour="black", alpha=0.8, pch=23, size=4)+
+  geom_point(data=humans, aes(y=gly_d15N, x=glu_d15N, fill=Site), colour="black", alpha=0.8,  pch=21, size=4)+
+  scale_fill_manual(values=combined_cols, breaks=combined_order)+
+  guides(fill = guide_legend(title = NULL))+  # Fig6's shared legend (extracted from this plot below) doesn't need a title
+    theme_bw() + theme(panel.grid = element_blank())+
+  coord_fixed(ratio = 1.3)
+Fig6c
+```
+
+#26. Save Fig6 (A-C)
+
+```{r}
+Fig6_legend <- cowplot::get_legend(Fig6c)
+Fig6_top    <- cowplot::plot_grid(Fig6a + theme(legend.position = "none"),
+                                  Fig6b + theme(legend.position = "none"),
+                                  labels = c("A", "B"), ncol = 2)
+Fig6_bottom <- cowplot::plot_grid(Fig6c + theme(legend.position = "none"), Fig6_legend,
+                                  labels = c("C", ""), ncol = 2)
+Fig6 <- cowplot::plot_grid(Fig6_top, Fig6_bottom, nrow = 2)
+Fig6
+ggsave(here('figures','Fig6.svg'), width = 17.8, height = 17.8, dpi = 300, units = "cm", device='svg')
+ggsave(here('figures','Fig6.pdf'), width = 17.8, height = 17.8, dpi = 300, units = "cm", device = cairo_pdf)
+```
