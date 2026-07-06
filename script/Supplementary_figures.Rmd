@@ -8,12 +8,10 @@ output:
   pdf_document: default
 ---
 
-Combined script producing the manuscript's two supplementary figures:
-Supplementary Figure 1 (CSIA quality-control/mass-balance checks) and
-Supplementary Figure 2 (PCA on normalised and non-normalised amino acid
-values). Consolidated from Supplementary_figure1.Rmd and
-Supplementary_figure2.Rmd; see Figures_2_3_4_5_6.Rmd for the main manuscript
-figures.
+Produces the manuscript's two supplementary figures: Supplementary Figure 1
+(CSIA quality-control/mass-balance checks) and Supplementary Figure 2 (PCA on
+normalised and non-normalised amino acid values). See Figures_2_3_4_5_6.Rmd
+for the main manuscript figures.
 
 #1. Load packages and colour palette
 

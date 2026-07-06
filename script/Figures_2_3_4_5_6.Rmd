@@ -8,6 +8,10 @@ output:
   pdf_document: default
 ---
 
+Produces the manuscript's main figures: Fig2 (A-D), Fig3 (A-D), Fig4 (A-C),
+Fig5 (A-B), Fig6 (A-C). Section 15 runs the MixSIAR/JAGS mixing model, which
+can take a long time - Fig4 and Fig5 depend on its output. Supplementary
+figures are produced separately in Supplementary_figures.Rmd.
 
 #1. Load packages and colour palette
 
@@ -133,30 +137,21 @@ Ref_C <- na.omit(Ref_C)
 
 Ref_N <- Ref_N %>%  dplyr::select(Group, Group1, Category, Code, phe_d15N, lys_d15N)
 Ref_N <-Ref_N %>% rowwise() %>% mutate(lysphe_15N = (c(lys_d15N - phe_d15N)))
-# Grouped by Group1 (Terrestrial plants / Phytoplankton / Macroalgae) rather
-# than the finer Category column - Group1 and Terrestrial plants are values
-# of Group1 itself, not Category (this folds red/green/brown algae together
-# under Macroalgae).
-# NOTE: N_fingerprinting.csv's "Code" column is keyed to Group1 (MA/Phyto/TP),
-# distinct from C_fingerprinting.csv's "Code" column, which is keyed to the
-# finer Category (used for Ref_C_labels below).
+# Grouped by the coarser Group1 column (Terrestrial plants / Phytoplankton /
+# Macroalgae), which folds red/green/brown algae together under Macroalgae.
+# N_fingerprinting.csv's Code is keyed to Group1, while C_fingerprinting.csv's
+# Code (used below for Ref_C_labels) is keyed to the finer Category column.
 Ref_N <- Ref_N %>% dplyr::filter(Group1 %in% c('Macroalgae', 'Phytoplankton', 'Terrestrial plants'))
 Ref_N <- na.omit(Ref_N) #
 
 # Short Code labels (e.g. "TP", "Phyto", "BA") for each reference category,
-# used to label the density curves directly in the Fig2d/Fig3d marginal
-# panel below instead of relying solely on the fill legend.
+# used to label the density curves in the Fig2d/Fig3d marginal panels.
 #
-# find_exclusive_label_pos() places each label over a stretch of its own
-# curve where it is the tallest of all the overlapping categories (i.e. a
-# section of the distribution that isn't buried under a neighbour), rather
-# than at the raw median/peak, which for several of these categories falls
-# right in the middle of a heavily overlapping zone (see e.g. red algae/
-# phytoplankton/green algae/brown algae all overlapping around 0-4 permil).
-# For each category it finds the largest contiguous run of the shared grid
-# where that category's density exceeds every other category's, and labels
-# the point of highest density within that run. If a category is never the
-# tallest anywhere (fully masked by others), it falls back to its own peak.
+# find_exclusive_label_pos() places each label where its curve is tallest
+# relative to the others, landing it in a section of the distribution that
+# isn't buried under a neighbouring category, rather than at the raw peak
+# (which can sit in a heavily overlapping zone). Falls back to a category's
+# own peak if it is never the tallest anywhere.
 find_exclusive_label_pos <- function(data, value_col, group_col, grid) {
   groups <- unique(data[[group_col]])
   dens_mat <- sapply(groups, function(g) {
@@ -193,13 +188,10 @@ Ref_N_labels <- find_exclusive_label_pos(Ref_N, "lysphe_15N", "Group1", grid_N) 
   left_join(distinct(Ref_N, Group1, Code), by = "Group1")
 
 # Display-only copies of Ref_C/Ref_N, restricted to a window a little wider
-# than Fig2d_base's own axis limits (matching ggplot's default ~5% expansion
-# either side of -5/8 and -10/5). This keeps the density curves from being
-# dominated by a few far-outlying reference values, WITHOUT needing a second
-# coord_cartesian()/coord_flip() call on xdens/ydens - adding one of those
-# overrides the coordinate system axis_canvas() already set up to align xdens/
-# ydens with Fig2d_base, which was causing the two to drift out of alignment
-# (data appearing to sit outside the axes).
+# than Fig2d_base's own axis limits. Keeps the density curves from being
+# dominated by far-outlying reference values without needing a
+# coord_cartesian()/coord_flip() on xdens/ydens (which would break their
+# alignment with Fig2d_base).
 Ref_C_plot <- Ref_C %>% dplyr::filter(valphe_13C >= -6, valphe_13C <= 9)
 Ref_N_plot <- Ref_N %>% dplyr::filter(lysphe_15N >= -11, lysphe_15N <= 6)
 ```
@@ -221,12 +213,9 @@ Fig2d_base <-ggplot() +
   scale_x_continuous(position="bottom", limits=c(-5,8))+
   scale_y_continuous(position = "left",limits=c(-10,5))+
   theme_bw() + theme(panel.grid = element_blank())+
-  # Legend suppressed here (rather than repositioned) - Fig2's final assembled
-  # figure already hides every panel's legend (legend="none" in the ggarrange
-  # below), and a legend baked into this composite couldn't be stripped by
-  # that outer setting the way it is for a plain ggplot panel, which is what
-  # caused the earlier "multiple legends" problem. Nothing is lost: the same
-  # category colours are already shown in Fig2a-c.
+  # Legend suppressed here rather than at the outer ggarrange level - a legend
+  # baked into this cowplot composite can't be stripped the way a plain
+  # ggplot panel's can. Category colours are already shown in Fig2a-c.
   theme(legend.position = "none")+
   coord_fixed(ratio = 0.87)
 Fig2d_base
@@ -238,31 +227,17 @@ Make the composite Fig2d/Fig3d "big D" plot (main panel + marginal densities).
 library (ggExtra)
 library(ggpubr)
 library(cowplot)
-# axis_canvas() already builds xdens/ydens on the exact coordinate system
-# needed to line up with Fig2d_base - adding a second coord_cartesian()/
-# coord_flip() call on top of that replaces that alignment rather than
-# combining with it, which causes the density curves to drift out of
-# alignment with the main panel. Instead, Ref_C_plot/Ref_N_plot (filtered
-# above) keep the curves from extending past the visible window, and
-# legend.position="none" keeps these marginal plots from contributing their
-# own (redundant) Category legend to the composite - Fig2d_base/Fig3d_base's
-# own legend, or the outer figure's shared legend, already conveys the same
-# colours.
-# Some category peaks sit very close together (e.g. phytoplankton and red
-# algae), so plain geom_text labels would overlap. geom_text_repel nudges
-# them apart automatically and draws a short leader line back to the true
-# peak when it has to move a label.
+# axis_canvas() aligns xdens/ydens to Fig2d_base's coordinate system.
+# Ref_C_plot/Ref_N_plot (filtered above) keep the density curves within the
+# visible window, and legend.position="none" avoids a redundant Category
+# legend here (already shown via Fig2d_base/the outer figure's legend).
 xdens <- axis_canvas(Fig2d_base, axis = "x") +
   geom_density(data= Ref_C_plot, aes(x = valphe_13C, fill = Category), alpha = 0.5, linewidth = 0.2) +
-  # geom_label_repel (rather than geom_text_repel) draws an opaque white box
-  # behind each label so it stands out against whichever curve(s) it sits on
-  # top of. The label's text/border colour is also mapped to Category (via
-  # scale_colour_manual(values=ref_cols), matching the curve fill colours) so
-  # it's unambiguous which curve each label belongs to even when several
-  # labels sit close together. direction="y" keeps each label's x fixed at
-  # its own median (peak_x), so repel can only slide labels vertically to
-  # dodge collisions - they stay centred within the range they're labelling
-  # instead of drifting sideways onto a neighbouring curve.
+  # geom_label_repel draws a white box behind each label, coloured/bordered to
+  # match its curve (scale_colour_manual(values=ref_cols)) so it's clear which
+  # curve each label belongs to. direction="y" keeps each label's x fixed at
+  # its own median, so repel only slides labels vertically to dodge
+  # collisions rather than drifting onto a neighbouring curve.
   ggrepel::geom_label_repel(data = Ref_C_labels, aes(x = peak_x, y = peak_y, label = Code, colour = Category),
             size = 2.2, fontface = "bold", seed = 1, direction = "y",
             fill = "white", label.size = 0.35, label.padding = unit(0.1, "lines"),
@@ -273,12 +248,9 @@ xdens <- axis_canvas(Fig2d_base, axis = "x") +
   theme(legend.position = "none")
 ydens <- axis_canvas(Fig2d_base, axis = "y", coord_flip = TRUE) +
   geom_density(data = Ref_N_plot, aes(x = lysphe_15N, fill = Group1), alpha = 0.5, linewidth = 0.2) +
-  # Same white-background + colour-matched-border fix as xdens above -
-  # pre-flip this keeps each label's peak_x (its true Nitrogen median) fixed,
-  # so post-flip it stays aligned with the correct point on Fig2d_base's
-  # y-axis instead of sliding onto a neighbouring range; only the
-  # density-height offset (post-flip: how far the label sits from the axis)
-  # is free to move.
+  # Same approach as xdens above; pre-flip this keeps each label's peak_x
+  # (its Nitrogen median) fixed so post-flip it stays aligned with the
+  # correct point on Fig2d_base's y-axis.
   ggrepel::geom_label_repel(data = Ref_N_labels, aes(x = peak_x, y = peak_y, label = Code, colour = Group1),
             size = 2.2, fontface = "bold", seed = 1, direction = "y",
             fill = "white", label.size = 0.35, label.padding = unit(0.1, "lines"),
@@ -288,13 +260,11 @@ ydens <- axis_canvas(Fig2d_base, axis = "y", coord_flip = TRUE) +
   scale_fill_manual(values = ref_group1_cols) +
   scale_colour_manual(values = ref_group1_cols) +
   theme(legend.position = "none")
-# panel_d_scale: single knob controlling how much extra width/height Fig2d/Fig3d's
-# grid cell gets in the "Save Fig 2"/"Save Fig 3" chunks below, to offset the
-# margin strips' share of the composite - D's core plotted area works out to
-# panel_d_scale/(1+margin_frac) times A/B/C's size, so setting it to exactly
-# 1+margin_frac makes D's core panel match A/B/C's size precisely (confirmed
-# by pixel-measuring the rendered panel borders: at the old 1.35 value D's
-# core panel came out ~12% larger than A/B/C, not smaller).
+# panel_d_scale controls how much extra width/height Fig2d/Fig3d's grid cell
+# gets, to offset the marginal density strips' share of the composite. D's
+# core plotted area scales as panel_d_scale/(1+margin_frac) relative to
+# A/B/C, so setting it to exactly 1+margin_frac makes D's core panel match
+# A/B/C's size.
 margin_frac <- 0.25  # relative size of the marginal density strip
 panel_d_scale <- 1 + margin_frac
 Fig2d <- insert_xaxis_grob(Fig2d_base, xdens, grid::unit(margin_frac, "null"), position = "top")
@@ -307,30 +277,23 @@ Fig2d
 
 ```{r}
 library(ggpubr)
-# Fig2d is a cowplot composite (main panel + marginal density strips on top/
-# right), so its core scatter area is smaller than a plain panel once
-# squeezed into the same grid cell as Fig2a-c. Arrange the bottom row and
-# the two rows separately so Fig2d's cell can be given extra width/height
-# (panel_d_scale, set above) that offsets what its margin strips take up,
-# making its plotted area match Fig2a/b/c.
+# Fig2d is a cowplot composite (main panel + marginal density strips), so its
+# core scatter area would be smaller than a plain panel in the same grid
+# cell as Fig2a-c. Arranging rows separately lets Fig2d's cell get the extra
+# width/height (panel_d_scale) needed to compensate.
 Fig2_top    <- ggarrange(Fig2a, Fig2b, ncol = 2, labels = c("A", "B"), legend = "none")
 Fig2_bottom <- ggarrange(Fig2c, Fig2d, ncol = 2, labels = c("C", "D"), legend = "none",
                          widths = c(1, panel_d_scale))
 Fig2 <- ggarrange(Fig2_top, Fig2_bottom, nrow = 2, heights = c(1, panel_d_scale))
 Fig2
-# Growing the whole canvas by the same panel_d_scale factor (in both width and
-# height) keeps A, B, C and D in the same proportions throughout, giving D's
-# cell the extra room it needs without distorting the layout. The raw scaled
-# size (8.9 * (1 + panel_d_scale) = 20.9cm) exceeds Elsevier/JAS's 190mm
-# double-column maximum, so it's capped at 19cm here - since A/B/C/D are all
-# scaled down together by the same uniform factor, their relative proportions
-# (and absolute font sizes, which are set in points and unaffected by the
-# canvas size) stay identical; only the overall figure comes out ~9% smaller.
+# Scaling the whole canvas by panel_d_scale keeps A/B/C/D in the same
+# proportions. The raw scaled size (8.9*(1+panel_d_scale) ~ 20.9cm) exceeds
+# Elsevier/JAS's 190mm double-column maximum, so it's capped at 19cm; this
+# scales all panels uniformly and doesn't affect font size (set in points).
 fig2_side <- min(8.9 * (1 + panel_d_scale), 19)
 ggsave(here('figures','Fig2.svg'), width = fig2_side, height = fig2_side, dpi = 300, units = "cm", device='svg')
-# Submission-ready vector PDF (Journal of Archaeological Science/Elsevier accepts EPS or PDF
-# for vector line-art figures; cairo_pdf - rather than the default pdf() device - is needed
-# for correct rendering of the delta/permil Unicode symbols used in the axis labels).
+# Vector PDF for journal submission (Elsevier/JAS accepts EPS or PDF for vector
+# figures); cairo_pdf renders the delta/permil Unicode symbols correctly.
 ggsave(here('figures','Fig2.pdf'), width = fig2_side, height = fig2_side, dpi = 300, units = "cm", device = cairo_pdf)
 ```
 

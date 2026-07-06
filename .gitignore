@@ -1,0 +1,15 @@
+# OS
+.DS_Store
+
+# R session/build artifacts
+.Rhistory
+.RData
+.Rproj.user/
+MixSIAR_model.txt
+
+# Editor/lock files
+.~lock.*#
+*~lock~
+
+# Claude Code local settings
+.claude/

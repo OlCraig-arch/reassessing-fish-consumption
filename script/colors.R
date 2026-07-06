@@ -21,10 +21,6 @@ site_cols <- c(
 site_order <- names(site_cols)
 
 # ---- Faunal / dietary category colours (fauna points, aes(fill/colour = category)) ----
-# NOTE: previously terrestrial_herbivore used "#999933" (olive), which is not part of
-# the Okabe-Ito set and sits close to the yellow/orange already used for two sites.
-# Replaced with vermillion so all 7 site+category colours below are mutually
-# distinguishable Okabe-Ito hues with no repeats.
 category_cols <- c(
   "marine_fauna"          = "#0072B2",  # blue
   "terrestrial_herbivore" = "#D55E00",  # vermillion
@@ -32,19 +28,12 @@ category_cols <- c(
 )
 
 # ---- Combined palette ----
-# Several figures show fauna (coloured/filled by category) and humans
-# (filled by Site) together in the same panel/legend, e.g. Figure_2_3.Rmd
-# Fig3a-d. Use this combined vector + order wherever both appear together.
+# Several figures show fauna (coloured/filled by category) and humans (filled
+# by Site) together in the same panel/legend, e.g. Fig3a-d in
+# Figures_2_3_4_5_6.Rmd. Use this combined vector + order wherever both
+# appear together.
 combined_cols  <- c(site_cols, category_cols)
 combined_order <- c(site_order, names(category_cols))
-
-# ---- Human + fauna-category palette (no sites involved) ----
-# Used only in Figure_6.Rmd's box plot, where humans and fauna are pooled
-# into one "category" column (human / terrestrial_herbivore / terrestrial_omnivore /
-# marine_fauna) rather than split out by Site. Kept as a separate object
-# (not reusing the name `cols`) so it can never silently shadow combined_cols.
-box_cols <- c(category_cols, "human" = "#999999")  # grey - neutral, doesn't compete with the diet-source hues
-box_order <- c("human", names(category_cols))
 
 # ---- Reference / baseline producer category colours ----
 # Used for the primary-producer "fingerprinting" reference database
