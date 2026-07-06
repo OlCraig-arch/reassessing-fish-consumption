@@ -8,10 +8,10 @@ output:
   pdf_document: default
 ---
 
-Produces the manuscript's main figures: Fig2 (A-D), Fig3 (A-D), Fig4 (A-C),
-Fig5 (A-B), Fig6 (A-C). Section 15 runs the MixSIAR/JAGS mixing model, which
-can take a long time - Fig4 and Fig5 depend on its output. Supplementary
-figures are produced separately in Supplementary_figures.Rmd.
+Produces the manuscript's main figures: Fig1b, Fig2 (A-D), Fig3 (A-D),
+Fig4 (A-C), Fig5 (A-B), Fig6 (A-C). Section 16 runs the MixSIAR/JAGS mixing
+model, which can take a long time - Fig4 and Fig5 depend on its output.
+Supplementary figures are produced separately in Supplementary_figures.Rmd.
 
 #1. Load packages and colour palette
 
@@ -38,7 +38,48 @@ humans <- filter(Data, group == "Human")
 fauna <- filter(Data, group == "Fauna")
 ```
 
-#3. Create indices for Fig2/Fig3
+#3. Fig1b - bulk collagen isotopes in the context of previously published data
+
+Dataset_S2.csv compiles previously published bulk collagen isotope data
+(Colonese et al. 2014; Pezo-Lanfranco et al. 2018) for three of the four
+sites (Piaçaguera is not covered), alongside the samples selected for this
+study's CSIA analysis, matched by burial number.
+
+```{r}
+S2 <- read.csv(here('data','Dataset_S2.csv'))
+
+extract_burial <- function(x) {
+  sapply(x, function(v) {
+    if (is.na(v)) return(NA_character_)
+    v <- iconv(v, from = "UTF-8", to = "UTF-8", sub = "?")
+    m <- regmatches(v, regexpr("(?i)burial\\s+(\\S+)", v, perl = TRUE))
+    if (length(m) == 0 || m == "") return(NA_character_)
+    sub("(?i)burial\\s+", "", m, perl = TRUE)
+  }, USE.NAMES = FALSE)
+}
+
+humans_burial <- humans %>% mutate(burial_key = extract_burial(Original_.ID)) %>%
+  select(Site, Sample_ID, burial_key)
+S2 <- S2 %>% mutate(burial_key = extract_burial(Individual)) %>%
+  mutate(used_in_study = !is.na(burial_key) &
+           paste(Site, burial_key) %in% paste(humans_burial$Site, humans_burial$burial_key))
+
+Fig1b <- ggplot(S2, aes(x = X_13Ccol, y = X_15Ncol, fill = Site)) +
+  geom_point(data = subset(S2, !used_in_study), pch = 21, colour = "grey50", size = 2.5, stroke = 0.3) +
+  geom_point(data = subset(S2, used_in_study), pch = 21, colour = "black", size = 2.5, stroke = 0.3) +
+  scale_fill_manual(values = site_cols, breaks = site_order) +
+  labs(x = expression(delta^{13}*C[collagen]*"(‰)"), y = expression(delta^{15}*N[collagen]*"(‰)")) +
+  scale_x_continuous(position = "bottom", limits = c(-25, -5)) +
+  scale_y_continuous(position = "left", limits = c(0, 21)) +
+  theme_bw() + theme(panel.grid = element_blank()) +
+  coord_fixed(ratio = 1)
+Fig1b <- ggarrange(Fig1b, labels = "B")
+Fig1b
+ggsave(here('figures','Fig1b.svg'), width = 8.9, height = 8.9, dpi = 300, units = "cm", device='svg')
+ggsave(here('figures','Fig1b.pdf'), width = 8.9, height = 8.9, dpi = 300, units = "cm", device = cairo_pdf)
+```
+
+#4. Create indices for Fig2/Fig3
 
 ```{r}
 fauna <-fauna %>% rowwise() %>% mutate(valphe_13C = (c(val_d13C - phe_d13C)))
@@ -53,7 +94,7 @@ Site and faunal-category colours come from script/colors.R (source()'d above):
 `category_cols` (fauna-only panels, Fig2a-d) and `combined_cols`/`combined_order`
 (panels showing both fauna categories and human sites, Fig3a-d).
 
-#4. Fig2a Bulk isotope values of fauna
+#5. Fig2a Bulk isotope values of fauna
 
 ```{r}
 library(ggrepel)
@@ -72,7 +113,7 @@ Fig2a <-ggplot()+
 Fig2a
 ```
 
-#5. Fig2b d15N_Glu against d15N_Phe for fauna
+#6. Fig2b d15N_Glu against d15N_Phe for fauna
 
 ```{r}
   Fig2b <-ggplot() +
@@ -103,7 +144,7 @@ coord_fixed(ratio = 0.5)
 Fig2b
 ```
 
-#6. Fig2c d15NGlu_Phe against d13CVal-Phe for fauna
+#7. Fig2c d15NGlu_Phe against d13CVal-Phe for fauna
 
 ```{r}
 Fig2c <-ggplot() +
@@ -121,7 +162,7 @@ Fig2c <-ggplot() +
 Fig2c
 ```
 
-#7. Fig2d faunal remains fingerprinting
+#8. Fig2d faunal remains fingerprinting
 
 Define reference ranges from primary producer databases.
 
@@ -273,7 +314,7 @@ Fig2d <-ggdraw(Fig2d)
 Fig2d
 ```
 
-#8. Save Fig2 (A-D)
+#9. Save Fig2 (A-D)
 
 ```{r}
 library(ggpubr)
@@ -297,7 +338,7 @@ ggsave(here('figures','Fig2.svg'), width = fig2_side, height = fig2_side, dpi = 
 ggsave(here('figures','Fig2.pdf'), width = fig2_side, height = fig2_side, dpi = 300, units = "cm", device = cairo_pdf)
 ```
 
-#9. Fig3a Bulk isotope values of humans
+#10. Fig3a Bulk isotope values of humans
 
 ```{r}
 Fig3a <-ggplot()+
@@ -314,7 +355,7 @@ Fig3a <-ggplot()+
 Fig3a
 ```
 
-#10. Fig3b d15N Glu against d15N Phe for humans
+#11. Fig3b d15N Glu against d15N Phe for humans
 
 ```{r}
   Fig3b <-ggplot() +
@@ -338,7 +379,7 @@ coord_fixed(ratio = 0.5)
 Fig3b
 ```
 
-#11. Fig3c Glxphe against Valphe for humans
+#12. Fig3c Glxphe against Valphe for humans
 
 ```{r}
 Fig3c <-ggplot() +
@@ -355,7 +396,7 @@ Fig3c <-ggplot() +
 Fig3c
 ```
 
-#12. Fig3d faunal remains fingerprinting (humans overlaid)
+#13. Fig3d faunal remains fingerprinting (humans overlaid)
 
 ```{r}
 Fig3d <-ggplot() +
@@ -375,7 +416,7 @@ Fig3d <-ggdraw(Fig3d)
 Fig3d
 ```
 
-#13. Save Fig3 (A-D)
+#14. Save Fig3 (A-D)
 
 ```{r}
 library(ggpubr)
@@ -391,7 +432,7 @@ ggsave(here('figures','Fig3.svg'), width = fig3_side, height = fig3_side, dpi = 
 ggsave(here('figures','Fig3.pdf'), width = fig3_side, height = fig3_side, dpi = 300, units = "cm", device = cairo_pdf)
 ```
 
-#14. Prepare EAA data for the MixSIAR mixing model (Fig4/Fig5)
+#15. Prepare EAA data for the MixSIAR mixing model (Fig4/Fig5)
 
 ```{r}
 EAA <- Data %>%  dplyr::select(Site, Region, Sample_ID, category, common_name, Group, group, d34S,d13C,d15N, ile_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C, phe_d15N, lys_d15N)
@@ -438,7 +479,7 @@ Humans <- EAA %>% subset(group =="Human")
 write.csv (Humans, here('mixingmodel','Humans.csv'), row.names=FALSE)
 ```
 
-#15. Apply the MixSIAR model
+#16. Apply the MixSIAR model
 
 Load source data and consumer data.
 
@@ -480,7 +521,7 @@ jags.1 <- run_model(run="test", mix, source, discr, model_filename)
 jags.1 <- run_model(run="very long", mix, source, discr, model_filename)
 ```
 
-#16. Obtain model outputs and check for convergence
+#17. Obtain model outputs and check for convergence
 
 ```{r}
 output_options <- list(summary_save = TRUE,
@@ -561,7 +602,7 @@ write.csv(Result_mixM, here::here("mixingmodel", "Result_mix.csv"), row.names = 
 Site colours for Fig4/Fig5 come from script/colors.R (`site_cols`/`site_order`)
 - these panels only encode human Site, not faunal category.
 
-#17. Fig4a % marine source AA against bulk carbon isotope values
+#18. Fig4a % marine source AA against bulk carbon isotope values
 
 ```{r}
 library(ggplot2)
@@ -580,7 +621,7 @@ Fig4a <-ggplot(Result_mix) +
 Fig4a
 ```
 
-#18. Fig4b % marine source AA against bulk nitrogen isotope values
+#19. Fig4b % marine source AA against bulk nitrogen isotope values
 
 ```{r}
 Fig4b <-ggplot(Result_mix) +
@@ -596,7 +637,7 @@ Fig4b <-ggplot(Result_mix) +
 Fig4b
 ```
 
-#19. Derive trophic position from % marine mix (Ramirez et al. values)
+#20. Derive trophic position from % marine mix (Ramirez et al. values)
 
 Derive the terrestrial beta value from herbivores, assuming they are TP2.
 
@@ -635,7 +676,7 @@ Result_mix_TP_final <- Result_mix_TP %>%
   rowwise() %>% mutate(Mix_TP = (((glu_d15N - phe_d15N) + (((Mean_marine)*beta_M) + ((Mean_terrestrial))*beta_T)) / TDF) + 1)%>% mutate(Mix_TP_sigma = (sqrt(dTP_dGlu + dTP_dPhe + dTP_dBeta +dTP_dBeta_T + dTP_dBeta_M + dTP_sigma)))
 ```
 
-#20. Fig4c estimated trophic position against % marine source AA
+#21. Fig4c estimated trophic position against % marine source AA
 
 ```{r}
 Fig4c <- ggplot(Result_mix_TP_final) +
@@ -652,7 +693,7 @@ Fig4c <- ggplot(Result_mix_TP_final) +
 Fig4c
 ```
 
-#21. Save Fig4 (A-C)
+#22. Save Fig4 (A-C)
 
 ```{r}
 library(ggpubr)
@@ -663,7 +704,7 @@ ggsave(here('figures','Fig4.svg'), width = 17.8, height = 17.8, dpi = 300, units
 ggsave(here('figures','Fig4.pdf'), width = 17.8, height = 17.8, dpi = 300, units = "cm", device = cairo_pdf)
 ```
 
-#22. Fig5a percent marine source AA against d34S
+#23. Fig5a percent marine source AA against d34S
 
 ```{r}
 Fig5a <- ggplot(Result_mix_TP_final) +
@@ -679,7 +720,7 @@ Fig5a <- ggplot(Result_mix_TP_final) +
 Fig5a
 ```
 
-#23. Fig5b estimated trophic position against d34S
+#24. Fig5b estimated trophic position against d34S
 
 ```{r}
 Fig5b <-ggplot(Result_mix_TP_final) +
@@ -694,7 +735,7 @@ Fig5b <-ggplot(Result_mix_TP_final) +
 Fig5b
 ```
 
-#24. Save Fig5 (A-B)
+#25. Save Fig5 (A-B)
 
 ```{r}
 Fig5 <- ggarrange(Fig5a, Fig5b, labels = c("A", "B"), ncol = 2, common.legend = TRUE, legend = "bottom")
@@ -721,7 +762,7 @@ d34S_marine_by_site
 cor.test(humans_mix$d34S, humans_mix$Mean_marine, method = "pearson")  # pooled, for comparison
 ```
 
-#25. Fig6 - compound specific isotope analysis of AMD cod (carbon fingerprinting)
+#26. Fig6 - compound specific isotope analysis of AMD cod (carbon fingerprinting)
 
 
 ```{r}
@@ -765,7 +806,7 @@ Fig6c <-ggplot()+
 Fig6c
 ```
 
-#26. Save Fig6 (A-C)
+#27. Save Fig6 (A-C)
 
 ```{r}
 Fig6_legend <- cowplot::get_legend(Fig6c)
