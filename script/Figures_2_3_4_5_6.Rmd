@@ -41,20 +41,23 @@ fauna <- filter(Data, group == "Fauna")
 #3. Fig1b - bulk collagen isotopes in the context of previously published data
 
 Dataset_S2.csv compiles previously published bulk collagen isotope data
-(Colonese et al. 2014; Pezo-Lanfranco et al. 2018) for three of the four
-sites (Piaçaguera is not covered), alongside the samples selected for this
-study's CSIA analysis, matched by burial number.
+(Colonese et al. 2014; Pezo-Lanfranco et al. 2018), alongside the samples
+selected for this study's CSIA analysis, matched by burial number. Most
+sites' Individual entries are formatted "Burial <number>"; Piaçaguera's are
+bare numbers (e.g. "5"), so the matching falls back to those directly.
 
 ```{r}
-S2 <- read.csv(here('data','Dataset_S2.csv'))
+S2 <- read.csv(here('data','Dataset_S2.csv'), fileEncoding = "macintosh")
 
 extract_burial <- function(x) {
   sapply(x, function(v) {
     if (is.na(v)) return(NA_character_)
     v <- iconv(v, from = "UTF-8", to = "UTF-8", sub = "?")
     m <- regmatches(v, regexpr("(?i)burial\\s+(\\S+)", v, perl = TRUE))
-    if (length(m) == 0 || m == "") return(NA_character_)
-    sub("(?i)burial\\s+", "", m, perl = TRUE)
+    if (length(m) > 0 && m != "") return(sub("(?i)burial\\s+", "", m, perl = TRUE))
+    v_trim <- trimws(v)
+    if (grepl("^[0-9]+[A-Za-z]?$", v_trim)) return(v_trim)
+    NA_character_
   }, USE.NAMES = FALSE)
 }
 
@@ -744,22 +747,52 @@ ggsave(here('figures','Fig5.svg'), width = 17.8, height = 8.9, dpi = 300, units 
 ggsave(here('figures','Fig5.pdf'), width = 17.8, height = 8.9, dpi = 300, units = "cm", device = cairo_pdf)
 ```
 
-Is there a correlation between d34S and % marine consumption, by site? Pooling all
-sites together gives essentially no correlation (r ~ 0, Fig5a) - but this masks a
-positive within-site relationship at three of the four sites, because each site sits
-in its own d34S/%marine cluster (Jab II close to 100% marine with little d34S spread;
-Moraes/Piaçaguera/Morro do Ouro spanning a wider range) - pooling erases the trend
-that holds *within* a site.
-
 ```{r}
 humans_mix <- Result_mix_TP_final %>% filter(group == "Human", !is.na(Mean_marine), !is.na(d34S))
-d34S_marine_by_site <- humans_mix %>% group_by(Site) %>% summarise(
-  n = n(),
-  r = ifelse(n() >= 3, cor(d34S, Mean_marine, method = "pearson"), NA),
-  p = ifelse(n() >= 3, cor.test(d34S, Mean_marine, method = "pearson")$p.value, NA)
-)
+
+n_sim <- 10000
+set.seed(1)
+d34S_marine_by_site <- humans_mix %>% group_by(Site) %>% group_modify(~{
+  if (nrow(.x) < 3) return(tibble(n = nrow(.x), r = NA, p = NA, r_lower = NA, r_upper = NA, p_lower = NA, p_upper = NA))
+  sim <- replicate(n_sim, {
+    marine_sim <- rnorm(nrow(.x), .x$Mean_marine, .x$SD_marine)
+    c(r = cor(.x$d34S, marine_sim), p = cor.test(.x$d34S, marine_sim)$p.value)
+  })
+  tibble(
+    n = nrow(.x),
+    r = cor(.x$d34S, .x$Mean_marine, method = "pearson"),
+    p = cor.test(.x$d34S, .x$Mean_marine, method = "pearson")$p.value,
+    r_lower = quantile(sim["r", ], 0.025),
+    r_upper = quantile(sim["r", ], 0.975),
+    p_lower = quantile(sim["p", ], 0.025),
+    p_upper = quantile(sim["p", ], 0.975)
+  )
+})
 d34S_marine_by_site
 cor.test(humans_mix$d34S, humans_mix$Mean_marine, method = "pearson")  # pooled, for comparison
+```
+
+```{r}
+humans_tp <- Result_mix_TP_final %>% filter(group == "Human", !is.na(Mix_TP), !is.na(d34S))
+
+d34S_TP_by_site <- humans_tp %>% group_by(Site) %>% group_modify(~{
+  if (nrow(.x) < 3) return(tibble(n = nrow(.x), r = NA, p = NA, r_lower = NA, r_upper = NA, p_lower = NA, p_upper = NA))
+  sim <- replicate(n_sim, {
+    tp_sim <- rnorm(nrow(.x), .x$Mix_TP, .x$Mix_TP_sigma)
+    c(r = cor(.x$d34S, tp_sim), p = cor.test(.x$d34S, tp_sim)$p.value)
+  })
+  tibble(
+    n = nrow(.x),
+    r = cor(.x$d34S, .x$Mix_TP, method = "pearson"),
+    p = cor.test(.x$d34S, .x$Mix_TP, method = "pearson")$p.value,
+    r_lower = quantile(sim["r", ], 0.025),
+    r_upper = quantile(sim["r", ], 0.975),
+    p_lower = quantile(sim["p", ], 0.025),
+    p_upper = quantile(sim["p", ], 0.975)
+  )
+})
+d34S_TP_by_site
+cor.test(humans_tp$d34S, humans_tp$Mix_TP, method = "pearson")  # pooled, for comparison
 ```
 
 #26. Fig6 - compound specific isotope analysis of AMD cod (carbon fingerprinting)
