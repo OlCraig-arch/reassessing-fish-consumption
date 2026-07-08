@@ -6,6 +6,7 @@
 .RData
 .Rproj.user/
 MixSIAR_model.txt
+elevation_data/
 
 # Editor/lock files
 .~lock.*#
