@@ -43,9 +43,10 @@ fauna <- filter(Data, group == "Fauna")
 Site coordinates come from data/Site_coords.xlsx (HUMAN sheet). Points are
 coloured by Site using colors.R's site_cols/site_order, matching every
 other figure in this script - the source spreadsheet has no Region field
-to colour by instead. Country borders come from rnaturalearth (bundled data, no network needed);
-topography and bathymetry are fetched via geodata/marmap and cached locally
-after the first run.
+to colour by instead. Country borders come from rnaturalearth (bundled
+data, no network call needed - unlike giscoR, whose remote EU service
+proved unreliable mid-render); topography and bathymetry are fetched via
+geodata/marmap and cached locally after the first run.
 
 ```{r}
 library(readxl)
@@ -66,8 +67,6 @@ site_coords <- read_excel(here('data','Site_coords.xlsx'), sheet = "HUMAN") %>%
 x_min <- -50; x_max <- -43
 y_min <- -29; y_max <- -23
 
-# rnaturalearth ships its data locally (via rnaturalearthdata), unlike giscoR
-# which fetches from a remote EU service that proved unreliable mid-render.
 brazil <- ne_countries(country = "Brazil", scale = "medium", returnclass = "sf")
 
 dir.create(here('elevation_data'), showWarnings = FALSE)
@@ -82,7 +81,14 @@ depth_breaks <- c(-5000, -4000, -3000, -2000, -1000, -500, -200, -100, -50, 0)
 bath_colours <- colorRampPalette(c("#08306b", "#2171b5", "#6baed6", "#deebf7"))(length(depth_breaks) - 1)
 
 map_theme <- theme_bw() +
-  theme(panel.grid = element_line(colour = "grey85", linewidth = 0.2), legend.position = "none")
+  theme(
+    panel.grid = element_line(colour = "grey85", linewidth = 0.2),
+    legend.position = "none",
+    # Smaller axis title/text than the default leaves more of the panel
+    # cell for the actual map instead of margin.
+    axis.title = element_text(size = 9),
+    axis.text = element_text(size = 7)
+  )
 
 legend_theme <- theme(
   legend.title = element_text(size = 8),
