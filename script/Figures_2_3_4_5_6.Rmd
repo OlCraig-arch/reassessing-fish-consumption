@@ -84,17 +84,17 @@ map_theme <- theme_bw() +
   theme(
     panel.grid = element_line(colour = "grey85", linewidth = 0.2),
     legend.position = "none",
-    # Smaller axis title/text than the default leaves more of the panel
-    # cell for the actual map instead of margin.
-    axis.title = element_text(size = 9),
+    # No axis titles (lon/lat is self-evident from the degree tick labels) -
+    # smaller tick text also leaves more of the panel cell for the map itself.
+    axis.title = element_blank(),
     axis.text = element_text(size = 7)
   )
 
 legend_theme <- theme(
-  legend.title = element_text(size = 8),
-  legend.text = element_text(size = 7),
-  legend.key.size = unit(0.34, "cm"),
-  legend.background = element_rect(fill = alpha("white", 0.85), colour = "grey40", linewidth = 0.3)
+  legend.title = element_text(size = 7),
+  legend.text = element_text(size = 6),
+  legend.key.size = unit(0.31, "cm"),
+  legend.background = element_rect(fill = "grey92", colour = NA)
 )
 
 base_map <- ggplot() +
@@ -147,15 +147,15 @@ human_map <- base_map +
     min.segment.length = Inf
   ) +
   scale_fill_manual(values = site_cols, breaks = site_order) +
-  labs(x = "Longitude", y = "Latitude") +
+  labs(x = NULL, y = NULL) +
   map_theme
 
 # Inset elements are placed by longitude/latitude (not canvas fraction), so
 # they stay put in empty map regions (clear of every site point/label)
 # regardless of the final figure's overall dimensions.
 Fig1a <- human_map +
-  annotation_custom(elev_legend, xmin = -49.9, xmax = -48.19, ymin = -25.44, ymax = -23.1) +
-  annotation_custom(depth_legend, xmin = -45.21, xmax = -43.05, ymin = -28.8, ymax = -25.56) +
+  annotation_custom(elev_legend, xmin = -49.9, xmax = -48.33, ymin = -25.25, ymax = -23.1) +
+  annotation_custom(depth_legend, xmin = -45.04, xmax = -43.05, ymin = -28.8, ymax = -25.82) +
   annotation_custom(ggplotGrob(inset_map), xmin = -47.95, xmax = -45.55, ymin = -28.8, ymax = -26.48)
 Fig1a
 ```
@@ -190,7 +190,7 @@ S2 <- S2 %>% mutate(burial_key = extract_burial(Individual)) %>%
            paste(Site, burial_key) %in% paste(humans_burial$Site, humans_burial$burial_key))
 
 Fig1b <- ggplot(S2, aes(x = X_13Ccol, y = X_15Ncol, fill = Site)) +
-  geom_point(data = subset(S2, !used_in_study), pch = 21, colour = "grey50", size = 2.5, stroke = 0.3) +
+  geom_point(data = subset(S2, !used_in_study), pch = 21, colour = "grey50", size = 2.5, stroke = 0.3, alpha = 0.55) +
   geom_point(data = subset(S2, used_in_study), pch = 21, colour = "black", size = 2.5, stroke = 0.3) +
   scale_fill_manual(values = site_cols, breaks = site_order) +
   labs(x = expression(delta^{13}*C[collagen]*"(‰)"), y = expression(delta^{15}*N[collagen]*"(‰)")) +
@@ -200,7 +200,7 @@ Fig1b <- ggplot(S2, aes(x = X_13Ccol, y = X_15Ncol, fill = Site)) +
   coord_fixed(ratio = 1) +
   theme(
     legend.position = "inside", legend.position.inside = c(0.8, 0.18),
-    legend.background = element_rect(fill = alpha("white", 0.85), colour = "grey40", linewidth = 0.3),
+    legend.background = element_rect(fill = alpha("white", 0.85), colour = NA),
     legend.title = element_text(size = 8), legend.text = element_text(size = 7),
     legend.key.size = unit(0.34, "cm")
   )
