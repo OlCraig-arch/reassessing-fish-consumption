@@ -956,7 +956,7 @@ d34S_TP_by_site
 cor.test(humans_tp$d34S, humans_tp$Mix_TP, method = "pearson")  # pooled, for comparison
 ```
 
-#28. Fig6 - compound specific isotope analysis of AMD cod (carbon fingerprinting)
+#28. Fig6 - the glycine problem (Gly d15N vs Phe, bulk collagen, and Glx)
 
 
 ```{r}
