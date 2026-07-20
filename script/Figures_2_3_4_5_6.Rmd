@@ -40,18 +40,16 @@ fauna <- filter(Data, group == "Fauna")
 
 #3. Fig1a - map of selected human isotope sites
 
-Site coordinates come from data/Site_coords.xlsx (HUMAN sheet). Points are
-coloured by Site using colors.R's site_cols/site_order, matching every
-other figure in this script - the source spreadsheet has no Region field
-to colour by instead. Country borders come from rnaturalearth (bundled
-data, no network call needed - unlike giscoR, whose remote EU service
-proved unreliable mid-render); topography and bathymetry are fetched via
-geodata/marmap and cached locally after the first run.
+Site coordinates come from data/Site_coords.xlsx (HUMAN sheet); points are
+coloured by Site using colors.R's site_cols/site_order. Country borders
+come from rnaturalearth/rnaturalearthhires (bundled locally); topography
+and bathymetry are fetched via geodata/marmap and cached after first run.
 
 ```{r}
 library(readxl)
 library(sf)
 library(rnaturalearth)
+library(rnaturalearthhires)
 library(geodata)
 library(terra)
 library(marmap)
@@ -67,15 +65,25 @@ site_coords <- read_excel(here('data','Site_coords.xlsx'), sheet = "HUMAN") %>%
 x_min <- -50; x_max <- -43
 y_min <- -29; y_max <- -23
 
-brazil <- ne_countries(country = "Brazil", scale = "medium", returnclass = "sf")
+brazil <- ne_countries(country = "Brazil", scale = "large", returnclass = "sf")
 
 dir.create(here('elevation_data'), showWarnings = FALSE)
-topo <- geodata::elevation_30s(country = "BRA", path = here('elevation_data'))
+# 3 arc-second SRTM tiles mosaiced together; the south-eastern tile is open
+# ocean with no SRTM data and 404s, so missing tiles are skipped.
+srtm_tiles <- expand.grid(lon = c(-47, -44), lat = c(-26, -22))
+topo_tiles <- lapply(seq_len(nrow(srtm_tiles)), function(i) {
+  tryCatch(
+    geodata::elevation_3s(lon = srtm_tiles$lon[i], lat = srtm_tiles$lat[i], path = here('elevation_data')),
+    error = function(e) NULL
+  )
+})
+topo_tiles <- Filter(function(t) inherits(t, "SpatRaster"), topo_tiles)
+topo <- do.call(terra::merge, topo_tiles)
 topo <- terra::crop(topo, terra::ext(x_min, x_max, y_min, y_max))
 topo_df <- as.data.frame(topo, xy = TRUE, na.rm = TRUE)
 colnames(topo_df)[3] <- "elevation"
 
-bath <- marmap::getNOAA.bathy(lon1 = x_min, lon2 = x_max, lat1 = y_min, lat2 = y_max, resolution = 1, keep = TRUE, path = here('elevation_data'))
+bath <- marmap::getNOAA.bathy(lon1 = x_min, lon2 = x_max, lat1 = y_min, lat2 = y_max, resolution = 0.5, keep = TRUE, path = here('elevation_data'))
 bath_df <- marmap::fortify.bathy(bath) %>% filter(z <= 0)
 depth_breaks <- c(-5000, -4000, -3000, -2000, -1000, -500, -200, -100, -50, 0)
 bath_colours <- colorRampPalette(c("#08306b", "#2171b5", "#6baed6", "#deebf7"))(length(depth_breaks) - 1)
@@ -84,35 +92,35 @@ map_theme <- theme_bw() +
   theme(
     panel.grid = element_line(colour = "grey85", linewidth = 0.2),
     legend.position = "none",
-    # No axis titles (lon/lat is self-evident from the degree tick labels) -
-    # smaller tick text also leaves more of the panel cell for the map itself.
     axis.title = element_blank(),
-    axis.text = element_text(size = 7)
+    axis.text = element_text(size = 7),
+    plot.margin = margin(2, 2, 2, 2)
   )
 
 legend_theme <- theme(
-  legend.title = element_text(size = 7),
-  legend.text = element_text(size = 6),
-  legend.key.size = unit(0.31, "cm"),
+  legend.title = element_text(size = 6),
+  legend.text = element_text(size = 5),
+  legend.key.size = unit(0.26, "cm"),
   legend.background = element_rect(fill = "grey92", colour = NA)
 )
 
 base_map <- ggplot() +
-  geom_tile(data = topo_df, aes(x = x, y = y, fill = elevation)) +
+  # geom_raster (not geom_tile) embeds this as one bitmap; geom_tile would
+  # draw millions of vector rects at this resolution, bloating the PDF.
+  geom_raster(data = topo_df, aes(x = x, y = y, fill = elevation)) +
   scale_fill_gradient(low = "#cde7ca", high = "#4b514a", name = "Elevation") +
   ggnewscale::new_scale_fill() +
   geom_contour_filled(data = bath_df, aes(x = x, y = y, z = z), breaks = depth_breaks, alpha = 0.75) +
   scale_fill_manual(values = bath_colours, name = "Depth") +
-  geom_sf(data = brazil, fill = NA, colour = "black", linewidth = 0.4) +
+  geom_sf(data = brazil, fill = NA, colour = "black", linewidth = 0.08) +
   coord_sf(xlim = c(x_min, x_max), ylim = c(y_min, y_max), expand = FALSE) +
   scale_x_continuous(breaks = seq(-50, -43, 1)) +
   scale_y_continuous(breaks = seq(-29, -23, 1))
 
-# Elevation/Depth legends are extracted from standalone copies of each layer
-# so they can be inset onto the map (top-left/bottom-right) instead of taking
-# up space as an external legend column.
+# Extracted from standalone copies so they can be inset onto the map
+# instead of taking space as an external legend column.
 elev_legend <- cowplot::get_legend(
-  ggplot(topo_df, aes(x = x, y = y, fill = elevation)) + geom_tile() +
+  ggplot(topo_df, aes(x = x, y = y, fill = elevation)) + geom_raster() +
     scale_fill_gradient(low = "#cde7ca", high = "#4b514a", name = "Elevation") +
     legend_theme
 )
@@ -125,21 +133,26 @@ depth_legend <- cowplot::get_legend(
 inset_map <- ggplot() +
   geom_sf(data = brazil, fill = "#cde7ca", colour = "#4b514a", linewidth = 0.25) +
   geom_rect(aes(xmin = x_min, xmax = x_max, ymin = y_min, ymax = y_max), colour = "red", fill = NA, linewidth = 0.8) +
-  annotate("text", x = -53, y = -10, label = "Brazil", size = 5, colour = "grey30") +
+  annotate("text", x = -53, y = -10, label = "Brazil", size = 4, colour = "grey30") +
   coord_sf(xlim = c(-75, -32), ylim = c(-35, 6), expand = FALSE) +
   theme_void() +
   theme(
-    panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.5),
+    panel.border = element_blank(),
     panel.background = element_rect(fill = "grey92", colour = NA),
     plot.background = element_rect(fill = "grey92", colour = NA),
     plot.margin = unit(c(0, 0, 0, 0), "pt")
   )
 
-# Site colour still matches site_cols (as in every other figure), but with no
-# on-map legend - each point is labelled directly by name instead.
+# Rendered to a bitmap (not placed as a ggplotGrob) so annotation_raster
+# stretches it to fill its box exactly, rather than letterboxing to its
+# own coord_sf aspect ratio.
+inset_png <- tempfile(fileext = ".png")
+ggsave(inset_png, inset_map, width = 5, height = 4.93, units = "cm", dpi = 300, bg = "transparent")
+inset_img <- png::readPNG(inset_png)
+
 human_map <- base_map +
   ggnewscale::new_scale_fill() +
-  geom_point(data = site_coords, aes(x = LONG, y = LAT, fill = Site), shape = 21, size = 4.5, stroke = 0.55, colour = "black") +
+  geom_point(data = site_coords, aes(x = LONG, y = LAT, fill = Site), shape = 21, size = 3, stroke = 0.45, colour = "black") +
   geom_text_repel(
     data = site_coords, aes(x = LONG, y = LAT, label = Site),
     size = 3, colour = "black", seed = 1, nudge_y = 0.3,
@@ -150,13 +163,12 @@ human_map <- base_map +
   labs(x = NULL, y = NULL) +
   map_theme
 
-# Inset elements are placed by longitude/latitude (not canvas fraction), so
-# they stay put in empty map regions (clear of every site point/label)
-# regardless of the final figure's overall dimensions.
+# Placed by longitude/latitude (not canvas fraction) so they stay clear of
+# site points/labels regardless of the figure's final dimensions.
 Fig1a <- human_map +
-  annotation_custom(elev_legend, xmin = -49.9, xmax = -48.33, ymin = -25.25, ymax = -23.1) +
-  annotation_custom(depth_legend, xmin = -45.04, xmax = -43.05, ymin = -28.8, ymax = -25.82) +
-  annotation_custom(ggplotGrob(inset_map), xmin = -47.95, xmax = -45.55, ymin = -28.8, ymax = -26.48)
+  annotation_custom(elev_legend, xmin = -49.9, xmax = -48.57, ymin = -24.93, ymax = -23.1) +
+  annotation_custom(depth_legend, xmin = -44.835, xmax = -43.315, ymin = -28.8, ymax = -26.57) +
+  annotation_raster(inset_img, xmin = -47.55, xmax = -45.15, ymin = -28.8, ymax = -26.48)
 Fig1a
 ```
 
@@ -201,26 +213,24 @@ Fig1b <- ggplot(S2, aes(x = X_13Ccol, y = X_15Ncol, fill = Site)) +
   theme(
     legend.position = "inside", legend.position.inside = c(0.8, 0.18),
     legend.background = element_rect(fill = alpha("white", 0.85), colour = NA),
-    legend.title = element_text(size = 8), legend.text = element_text(size = 7),
-    legend.key.size = unit(0.34, "cm")
+    legend.title = element_text(size = 6), legend.text = element_text(size = 5),
+    legend.key.size = unit(0.26, "cm"),
+    plot.margin = margin(2, 2, 2, 2)
   )
 Fig1b
 ```
 
 #5. Save Fig1 (A-B)
 
-Fig1a's Elevation/Depth/inset-map elements and Fig1b's Site legend are all
-inset within their own panels (see above), so no external shared legend is
-needed here - this leaves both panels the full width to render at. Fig1a's
-true-to-scale map (7 x 6 degrees) is proportionally wider than Fig1b's
-near-square biplot panel, so the width ratio (1.2:1) reflects that instead
-of forcing both to an artificial equal square.
+Legends are inset within each panel (see above), so no external shared
+legend is needed. The width ratio (1.2:1) reflects Fig1a's wider true-scale
+aspect (7 x 6 degrees) versus Fig1b's near-square biplot.
 
 ```{r}
 Fig1 <- ggarrange(Fig1a, Fig1b, ncol = 2, labels = c("A", "B"), widths = c(1.2, 1))
 Fig1
-ggsave(here('figures','Fig1.svg'), width = 19, height = 9, dpi = 300, units = "cm", device='svg')
-ggsave(here('figures','Fig1.pdf'), width = 19, height = 9, dpi = 300, units = "cm", device = cairo_pdf)
+ggsave(here('figures','Fig1.svg'), width = 19, height = 9, dpi = 1200, units = "cm", device='svg')
+ggsave(here('figures','Fig1.pdf'), width = 19, height = 9, dpi = 1200, units = "cm", device = cairo_pdf)
 ```
 
 #6. Create indices for Fig2/Fig3
@@ -268,10 +278,8 @@ Fig2a
   colour ="black", pch=23, alpha=0.6, size=4)+
   geom_text_repel(data=fauna, aes(y=glu_d15N, x=phe_d15N, label=common_name), size=2.1,
                   seed=1, max.overlaps=Inf, box.padding=0.35, point.padding=0.3,
-                  # force_pull raised (0.5 -> 2) relative to force so repel can't drag a
-                  # label far from its own point (e.g. "coati") just to dodge a neighbour -
-                  # ggrepel has no direct max-segment-length option, so this ratio is the
-                  # practical equivalent, capping how far any label is allowed to travel.
+                  # force_pull raised relative to force so repel can't drag a label far
+                  # from its point (e.g. "coati") just to dodge a neighbour.
                   force=3, force_pull=2, max.time=2, max.iter=1e5,
                   min.segment.length=Inf, segment.size=0.2)+  # never draw a leader line - just place the label near its point
   annotate("text", label = "T1", x = 7 , y = 0, size = 3, colour = "black",angle = 25)+
@@ -313,7 +321,6 @@ Define reference ranges from primary producer databases.
 ```{r}
 Ref_C <-  read.csv(here('data','C_fingerprinting.csv'))
 Ref_N <-  read.csv(here('data','N_fingerprinting.csv'))
-#select EAA
 Ref_C <- Ref_C %>%  dplyr::select(Group, Category, Code, ile_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)
 Ref_C <-Ref_C %>% rowwise() %>% mutate(valphe_13C = (c(val_d13C - phe_d13C)))
 Ref_C <- Ref_C %>% dplyr::filter(Category == 'C3_terrestrial_plant' | Category == 'phytoplankton' |Category == 'green algae' |Category == 'brown algae' |Category == 'red algae')
@@ -322,21 +329,13 @@ Ref_C <- na.omit(Ref_C)
 
 Ref_N <- Ref_N %>%  dplyr::select(Group, Group1, Category, Code, phe_d15N, lys_d15N)
 Ref_N <-Ref_N %>% rowwise() %>% mutate(lysphe_15N = (c(lys_d15N - phe_d15N)))
-# Grouped by the coarser Group1 column (Terrestrial plants / Phytoplankton /
-# Macroalgae), which folds red/green/brown algae together under Macroalgae.
-# N_fingerprinting.csv's Code is keyed to Group1, while C_fingerprinting.csv's
-# Code (used below for Ref_C_labels) is keyed to the finer Category column.
+# Group1 folds red/green/brown algae together under Macroalgae.
 Ref_N <- Ref_N %>% dplyr::filter(Group1 %in% c('Macroalgae', 'Phytoplankton', 'Terrestrial plants'))
-Ref_N <- na.omit(Ref_N) #
+Ref_N <- na.omit(Ref_N)
 
-# Short Code labels (e.g. "TP", "Phyto", "BA") for each reference category,
-# used to label the density curves in the Fig2d/Fig3d marginal panels.
-#
-# find_exclusive_label_pos() places each label where its curve is tallest
-# relative to the others, landing it in a section of the distribution that
-# isn't buried under a neighbouring category, rather than at the raw peak
-# (which can sit in a heavily overlapping zone). Falls back to a category's
-# own peak if it is never the tallest anywhere.
+# Places each category's label where its density curve is tallest relative
+# to the others (falls back to its own peak if never tallest anywhere), so
+# labels land clear of overlapping neighbours in the Fig2d/Fig3d margins.
 find_exclusive_label_pos <- function(data, value_col, group_col, grid) {
   groups <- unique(data[[group_col]])
   dens_mat <- sapply(groups, function(g) {
@@ -366,17 +365,12 @@ grid_C <- seq(-6, 9, length.out = 600)   # matches Ref_C_plot's display window
 Ref_C_labels <- find_exclusive_label_pos(Ref_C, "valphe_13C", "Category", grid_C) %>%
   left_join(distinct(Ref_C, Category, Code), by = "Category")
 
-# Same idea for the y-axis (Nitrogen) marginal density, labelled by Group1's
-# own Code (MA/Phyto/TP).
 grid_N <- seq(-11, 6, length.out = 600)  # matches Ref_N_plot's display window
 Ref_N_labels <- find_exclusive_label_pos(Ref_N, "lysphe_15N", "Group1", grid_N) %>%
   left_join(distinct(Ref_N, Group1, Code), by = "Group1")
 
-# Display-only copies of Ref_C/Ref_N, restricted to a window a little wider
-# than Fig2d_base's own axis limits. Keeps the density curves from being
-# dominated by far-outlying reference values without needing a
-# coord_cartesian()/coord_flip() on xdens/ydens (which would break their
-# alignment with Fig2d_base).
+# Restricted to a window near Fig2d_base's axis limits so far-outlying
+# reference values don't dominate the density curves.
 Ref_C_plot <- Ref_C %>% dplyr::filter(valphe_13C >= -6, valphe_13C <= 9)
 Ref_N_plot <- Ref_N %>% dplyr::filter(lysphe_15N >= -11, lysphe_15N <= 6)
 ```
@@ -398,9 +392,8 @@ Fig2d_base <-ggplot() +
   scale_x_continuous(position="bottom", limits=c(-5,8))+
   scale_y_continuous(position = "left",limits=c(-10,5))+
   theme_bw() + theme(panel.grid = element_blank())+
-  # Legend suppressed here rather than at the outer ggarrange level - a legend
-  # baked into this cowplot composite can't be stripped the way a plain
-  # ggplot panel's can. Category colours are already shown in Fig2a-c.
+  # Suppressed here (not at ggarrange level) since a legend baked into this
+  # cowplot composite can't be stripped afterwards like a plain panel's can.
   theme(legend.position = "none")+
   coord_fixed(ratio = 0.87)
 Fig2d_base
@@ -413,16 +406,10 @@ library (ggExtra)
 library(ggpubr)
 library(cowplot)
 # axis_canvas() aligns xdens/ydens to Fig2d_base's coordinate system.
-# Ref_C_plot/Ref_N_plot (filtered above) keep the density curves within the
-# visible window, and legend.position="none" avoids a redundant Category
-# legend here (already shown via Fig2d_base/the outer figure's legend).
 xdens <- axis_canvas(Fig2d_base, axis = "x") +
   geom_density(data= Ref_C_plot, aes(x = valphe_13C, fill = Category), alpha = 0.5, linewidth = 0.2) +
-  # geom_label_repel draws a white box behind each label, coloured/bordered to
-  # match its curve (scale_colour_manual(values=ref_cols)) so it's clear which
-  # curve each label belongs to. direction="y" keeps each label's x fixed at
-  # its own median, so repel only slides labels vertically to dodge
-  # collisions rather than drifting onto a neighbouring curve.
+  # direction="y" keeps each label's x fixed at its own median, so repel
+  # only slides labels vertically to dodge collisions.
   ggrepel::geom_label_repel(data = Ref_C_labels, aes(x = peak_x, y = peak_y, label = Code, colour = Category),
             size = 2.2, fontface = "bold", seed = 1, direction = "y",
             fill = "white", label.size = 0.35, label.padding = unit(0.1, "lines"),
@@ -433,9 +420,7 @@ xdens <- axis_canvas(Fig2d_base, axis = "x") +
   theme(legend.position = "none")
 ydens <- axis_canvas(Fig2d_base, axis = "y", coord_flip = TRUE) +
   geom_density(data = Ref_N_plot, aes(x = lysphe_15N, fill = Group1), alpha = 0.5, linewidth = 0.2) +
-  # Same approach as xdens above; pre-flip this keeps each label's peak_x
-  # (its Nitrogen median) fixed so post-flip it stays aligned with the
-  # correct point on Fig2d_base's y-axis.
+  # Mirrors xdens; pre-flip keeps peak_x aligned post-flip with Fig2d_base's y-axis.
   ggrepel::geom_label_repel(data = Ref_N_labels, aes(x = peak_x, y = peak_y, label = Code, colour = Group1),
             size = 2.2, fontface = "bold", seed = 1, direction = "y",
             fill = "white", label.size = 0.35, label.padding = unit(0.1, "lines"),
@@ -445,11 +430,8 @@ ydens <- axis_canvas(Fig2d_base, axis = "y", coord_flip = TRUE) +
   scale_fill_manual(values = ref_group1_cols) +
   scale_colour_manual(values = ref_group1_cols) +
   theme(legend.position = "none")
-# panel_d_scale controls how much extra width/height Fig2d/Fig3d's grid cell
-# gets, to offset the marginal density strips' share of the composite. D's
-# core plotted area scales as panel_d_scale/(1+margin_frac) relative to
-# A/B/C, so setting it to exactly 1+margin_frac makes D's core panel match
-# A/B/C's size.
+# panel_d_scale gives Fig2d/Fig3d's grid cell extra width/height to offset
+# the marginal density strips, so D's core panel matches A/B/C's size.
 margin_frac <- 0.25  # relative size of the marginal density strip
 panel_d_scale <- 1 + margin_frac
 Fig2d <- insert_xaxis_grob(Fig2d_base, xdens, grid::unit(margin_frac, "null"), position = "top")
@@ -462,23 +444,17 @@ Fig2d
 
 ```{r}
 library(ggpubr)
-# Fig2d is a cowplot composite (main panel + marginal density strips), so its
-# core scatter area would be smaller than a plain panel in the same grid
-# cell as Fig2a-c. Arranging rows separately lets Fig2d's cell get the extra
-# width/height (panel_d_scale) needed to compensate.
+# Rows arranged separately so Fig2d's cell gets the extra width/height
+# (panel_d_scale) its marginal density strips need, matching Fig2a-c's size.
 Fig2_top    <- ggarrange(Fig2a, Fig2b, ncol = 2, labels = c("A", "B"), legend = "none")
 Fig2_bottom <- ggarrange(Fig2c, Fig2d, ncol = 2, labels = c("C", "D"), legend = "none",
                          widths = c(1, panel_d_scale))
 Fig2 <- ggarrange(Fig2_top, Fig2_bottom, nrow = 2, heights = c(1, panel_d_scale))
 Fig2
-# Scaling the whole canvas by panel_d_scale keeps A/B/C/D in the same
-# proportions. The raw scaled size (8.9*(1+panel_d_scale) ~ 20.9cm) exceeds
-# Elsevier/JAS's 190mm double-column maximum, so it's capped at 19cm; this
-# scales all panels uniformly and doesn't affect font size (set in points).
+# Capped at 19cm (Elsevier/JAS's 190mm double-column max); cairo_pdf renders
+# the delta/permil Unicode symbols correctly for the PDF.
 fig2_side <- min(8.9 * (1 + panel_d_scale), 19)
 ggsave(here('figures','Fig2.svg'), width = fig2_side, height = fig2_side, dpi = 300, units = "cm", device='svg')
-# Vector PDF for journal submission (Elsevier/JAS accepts EPS or PDF for vector
-# figures); cairo_pdf renders the delta/permil Unicode symbols correctly.
 ggsave(here('figures','Fig2.pdf'), width = fig2_side, height = fig2_side, dpi = 300, units = "cm", device = cairo_pdf)
 ```
 
@@ -569,8 +545,6 @@ Fig3 <- ggarrange(Fig3a, Fig3b, Fig3c, Fig3d, ncol = 2, nrow = 2, labels = c("A"
                    widths = c(1, panel_d_scale), heights = c(1, panel_d_scale),
                    legend = "bottom", common.legend = TRUE)
 Fig3
-# Capped at 19cm for the same reason as fig2_side above (Elsevier/JAS's 190mm
-# double-column maximum) - uniform scaling preserves proportions/font sizes.
 fig3_side <- min(8.9 * (1 + panel_d_scale), 19)
 ggsave(here('figures','Fig3.svg'), width = fig3_side, height = fig3_side, dpi = 300, units = "cm", device='svg')
 ggsave(here('figures','Fig3.pdf'), width = fig3_side, height = fig3_side, dpi = 300, units = "cm", device = cairo_pdf)
@@ -737,8 +711,7 @@ All_humans <- Data %>% subset(group =="Human")
 Result_mix <- Data  %>% left_join (marine,
            by = c("Sample_ID"), ) %>% left_join (terrestrial,
            by = c("Sample_ID"), suffix = c("_marine", "_terrestrial"))
-Result_mix <-Result_mix %>% janitor::clean_names(case = "none")#use janitor funciton to clean nemes
-# Write DataFrame to a CSV file
+Result_mix <-Result_mix %>% janitor::clean_names(case = "none")
 Result_mixM = as.matrix(Result_mix )
 write.csv(Result_mixM, here::here("mixingmodel", "Result_mix.csv"), row.names = FALSE)
 ```
@@ -809,13 +782,12 @@ sigma_beta_M <- 1.8 # marine beta uncertainty
 sigma_beta_T <- 3.4  # terrestrial beta uncertainty
 sigma_TDF <- 1.1 # TDF uncertainty from Neilsen
 
-# Partial derivatives, added to a new sheet
+# Partial derivatives for error propagation
 Result_mix_TP <- Result_mix %>% rowwise() %>%
 mutate(dTP_dGlu = ((1/TDF)^2)*(glu_d15Nstdev^2))%>%mutate(dTP_dPhe=((-1/TDF)^2)*(phe_d15Nstdev^2))%>%mutate(dTP_dBeta=(((beta_M-beta_T)/TDF)^2)*(SD_marine^2))%>%mutate(dTP_dBeta_T=(((Mean_terrestrial)/TDF)^2)*(sigma_beta_T^2))%>%mutate(dTP_dBeta_M=((Mean_marine/TDF)^2)*(sigma_beta_M^2))%>%mutate(dTP_sigma=(((-1/(TDF^2))*(glu_d15N-phe_d15N+((Mean_terrestrial)*beta_T)+(Mean_marine*beta_M)))^2)*(sigma_TDF^2))
 ```
 
 ```{r}
-# Calculate trophic position using Ramirez values and add the combined uncertainty
 Result_mix_TP_final <- Result_mix_TP %>%
   rowwise() %>% mutate(Mix_TP = (((glu_d15N - phe_d15N) + (((Mean_marine)*beta_M) + ((Mean_terrestrial))*beta_T)) / TDF) + 1)%>% mutate(Mix_TP_sigma = (sqrt(dTP_dGlu + dTP_dPhe + dTP_dBeta +dTP_dBeta_T + dTP_dBeta_M + dTP_sigma)))
 ```
@@ -946,7 +918,7 @@ Fig6a <-ggplot()+
   scale_y_continuous(position = "left", limits=c(0,20))+
   geom_point(data=fauna, aes(y=gly_d15N, x=phe_d15N, fill=category), colour="black", alpha=0.8, pch=23, size=4)+
   geom_point(data=humans, aes(y=gly_d15N, x=phe_d15N, fill=Site), colour="black",  alpha=0.8, pch=21, size=4)+
-  # common_name labels dropped here (overplotting at n=this density) - see Fig2a for the labelled version
+  # common_name labels dropped (overplotting at this density) - see Fig2a for labelled version
   scale_fill_manual(values=combined_cols, breaks=combined_order)+
     theme_bw() + theme(panel.grid = element_blank())+
   coord_fixed(ratio = 1)

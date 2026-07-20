@@ -69,7 +69,6 @@ S1B
 ```
 
 ```{r}
-#QC1 d15N mass balance
 S1C <- ggplot(data=Data, aes(y=d15N_est, x=d15N))+
   labs(x=expression(delta^{15}*N[OBS]*"(‰)"), y=expression(delta^{15}*N[EST]*"(‰)"))+
   scale_x_continuous(position="bottom", limits=c(5,25))+
@@ -82,7 +81,6 @@ S1C
 ```
 
 ```{r}
-#QC2 d13C mass balance
 S1D <- ggplot(data=Data, aes(y=d13C_est, x=d13C))+
   labs(x=expression(delta^{13}*C[OBS]*"(‰)"), y=expression(delta^{13}*C[EST]*"(‰)"))+
   scale_x_continuous(position="bottom", limits=c(-25,-5))+
@@ -102,9 +100,6 @@ FigS1 <- ggarrange(S1A, S1B, S1C, S1D,
                     ncol = 2, nrow = 2, widths = c(2, 2), legend="none")
 FigS1
 ggsave(here('figures','SupplementaryFig1.svg'), width = 17.8, height = 17.8, dpi = 300, units = "cm", device='svg')
-# Submission-ready vector PDF (Journal of Archaeological Science/Elsevier accepts EPS or PDF
-# for vector line-art figures; cairo_pdf is needed for correct rendering of the delta/permil
-# Unicode symbols used in the axis labels).
 ggsave(here('figures','SupplementaryFig1.pdf'), width = 17.8, height = 17.8, dpi = 300, units = "cm", device = cairo_pdf)
 ```
 
@@ -133,42 +128,33 @@ humans filled by Site).
 ```{r}
 Sam_N <- Data %>%  select(Site, Sample_ID,category, group, ala_d15N, ser_d15N, asp_d15N, glu_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N)#drop d15N_Ile as missing values
 Sam_N  <- na.omit(Sam_N)
-#Create a new coloumn containing the row mean of the key amino acid for each row.
 Sam_N  <- Sam_N  %>% rowwise() %>% mutate(row_mean = mean(c(ala_d15N, asp_d15N, glu_d15N, ser_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N)))#
-#Subtract the row mean from each of the row values to normalize
 Sam_N  <- Sam_N  %>% rowwise() %>% mutate(across(c(ala_d15N, asp_d15N, glu_d15N, ser_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N), ~ .x - row_mean))
 ```
 
 ```{r}
 Sam_C <- Data %>%  select(Site, Sample_ID, category, group, ala_d13C, asp_d13C, ser_d13C, glu_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)#drop d15N_Ile as missing values
 Sam_C <- na.omit(Sam_C)
-#Create a new coloumn containing the row mean of the key amino acid for each row.
 Sam_C  <- Sam_C  %>% rowwise() %>% mutate(row_mean = mean(c(ala_d13C, asp_d13C, ser_d13C, glu_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)))#
-#Subtract the row mean from each of the row values to normalize
 Sam_C  <- Sam_C  %>% rowwise() %>% mutate(across(c(ala_d13C, asp_d13C, glu_d13C, ser_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C), ~ .x - row_mean))
 ```
 
 Carbon
 
 ```{r}
-#extract the amino acid values
 PCA_C <- Sam_C %>%  select(ala_d13C, asp_d13C, glu_d13C, ser_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)
 PCA <- prcomp(PCA_C, scale. = TRUE)
 
-# Calculate the percentage of variance explained by each linear discriminant
 percent_variance_explained <- PCA$sdev^2 / sum(PCA$sdev^2) * 100
 pc1_label <- paste0("PC 1 (", round(percent_variance_explained[1], 2), "%)")
 pc2_label <- paste0("PC 2 (", round(percent_variance_explained[2], 2), "%)")
 
-# Extract PC axes for plotting
 PCAvalues_C <- data.frame(Site = Sam_C$Site, group = Sam_C$group, category = Sam_C$category, PCA$x)
 humans <-filter(PCAvalues_C, group == "Human")
 fauna <-filter(PCAvalues_C, group == "Fauna")
 
-# Extract loadings of the variables
 PCAloadings <- data.frame(Variables = rownames(PCA$rotation), PCA$rotation)
 
-# Visualise the PCA
 S2A <- ggplot ()+
   geom_point(data=fauna, aes(y=PC1, x=PC2, colour=category), pch=23, size=4)+
     geom_point(data=humans, aes(y=PC1, x=PC2, fill=Site), alpha=0.8, colour="black", pch=21, size=3.5)+
@@ -191,24 +177,19 @@ S2A
 Nitrogen
 
 ```{r}
-#extract the amino acid values
 PCA_N <- Sam_N %>%  select(ala_d15N, ser_d15N, asp_d15N, glu_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N)
 PCA <- prcomp(PCA_N, scale. = TRUE)
 
-# Calculate the percentage of variance explained by each linear discriminant
 percent_variance_explained <- PCA$sdev^2 / sum(PCA$sdev^2) * 100
 pc1_label <- paste0("PC 1 (", round(percent_variance_explained[1], 2), "%)")
 pc2_label <- paste0("PC 2 (", round(percent_variance_explained[2], 2), "%)")
 
-# Extract PC axes for plotting
 PCAvalues_N <- data.frame(Site = Sam_N$Site, group = Sam_N$group, category = Sam_N$category, PCA$x)
 humans <-filter(PCAvalues_N, group == "Human")
 fauna <-filter(PCAvalues_N, group == "Fauna")
 
-# Extract loadings of the variables
 PCAloadings <- data.frame(Variables = rownames(PCA$rotation), PCA$rotation)
 
-# Visualise the PCA
 S2B <- ggplot ()+
   geom_point(data=fauna, aes(y=PC1, x=PC2, colour=category), pch=23, size=4)+
     geom_point(data=humans, aes(y=PC1, x=PC2, fill=Site), alpha=0.8, colour ="black", pch=21, size=3.5)+
@@ -240,24 +221,19 @@ Sam_Cx <- na.omit(Sam_Cx)
 Carbon
 
 ```{r}
-#extract the amino acid values
 PCA_Cx<- Sam_Cx %>%  select(ala_d13C, asp_d13C, glu_d13C, ser_d13C, gly_d13C, ile_d13C, thr_d13C, leu_d13C, lys_d13C, val_d13C, phe_d13C)
 PCAx <- prcomp(PCA_Cx, scale. = TRUE)
 
-# Calculate the percentage of variance explained by each linear discriminant
 percent_variance_explained <- PCAx$sdev^2 / sum(PCAx$sdev^2) * 100
 pc1_label <- paste0("PC 1 (", round(percent_variance_explained[1], 2), "%)")
 pc2_label <- paste0("PC 2 (", round(percent_variance_explained[2], 2), "%)")
 
-# Extract PC axes for plotting
 PCAvalues_Cx <- data.frame(Site = Sam_C$Site, group = Sam_Cx$group, category = Sam_Cx$category, PCAx$x)
 humansx <-filter(PCAvalues_Cx, group == "Human")
 faunax <-filter(PCAvalues_Cx, group == "Fauna")
 
-# Extract loadings of the variables
 PCAloadingsx <- data.frame(Variables = rownames(PCAx$rotation), PCAx$rotation)
 
-# Visualise the PCA
 S2C <- ggplot ()+
   geom_point(data=faunax, aes(y=PC1, x=PC2, colour=category), pch=23, size=4)+
     geom_point(data=humansx, aes(y=PC1, x=PC2, fill=Site), alpha=0.8, colour="black", pch=21, size=3.5)+
@@ -280,24 +256,19 @@ S2C
 Nitrogen
 
 ```{r}
-#extract the amino acid values
 PCA_Nx<- Sam_Nx %>%  select(ala_d15N, asp_d15N, ser_d15N, glu_d15N, gly_d15N, thr_d15N, leu_d15N, lys_d15N, val_d15N, phe_d15N)
 PCAx <- prcomp(PCA_Nx, scale. = TRUE)
 
-# Calculate the percentage of variance explained by each linear discriminant
 percent_variance_explained <- PCAx$sdev^2 / sum(PCAx$sdev^2) * 100
 pc1_label <- paste0("PC 1 (", round(percent_variance_explained[1], 2), "%)")
 pc2_label <- paste0("PC 2 (", round(percent_variance_explained[2], 2), "%)")
 
-# Extract PC axes for plotting
 PCAvalues_Nx <- data.frame(Site = Sam_Nx$Site, group = Sam_Nx$group, category = Sam_Nx$category, PCAx$x)
 humansx <-filter(PCAvalues_Nx, group == "Human")
 faunax <-filter(PCAvalues_Nx, group == "Fauna")
 
-# Extract loadings of the variables
 PCAloadingsx <- data.frame(Variables = rownames(PCAx$rotation), PCAx$rotation)
 
-# Visualise the PCA
 S2D <- ggplot ()+
   geom_segment(data = PCAloadingsx, aes(x = 0, y = 0, xend = (PC1*7),
      yend = (PC2*7)), arrow = arrow(length = unit(1/2, "picas")),
