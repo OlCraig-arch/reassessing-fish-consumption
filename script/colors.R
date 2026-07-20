@@ -34,6 +34,7 @@ category_cols <- c(
 # appear together.
 combined_cols  <- c(site_cols, category_cols)
 combined_order <- c(site_order, names(category_cols))
+combined_labels <- c(site_order, "Marine Fauna", "Terrestrial Herbivore", "Terrestrial Omnivore")
 
 # ---- Reference / baseline producer category colours ----
 # Used for the primary-producer "fingerprinting" reference database

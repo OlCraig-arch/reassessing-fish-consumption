@@ -256,7 +256,7 @@ Fig2a <-ggplot()+
   labs(y=expression(delta^{15}*N[collagen]*"(‰)"), x=expression(delta^{13}*C[collagen]*"(‰)"))+
   scale_x_continuous(position="bottom", limits=c(-25,-5))+
   scale_y_continuous(position = "left", limits=c(0,20))+
- geom_point(data=fauna, aes(y=d15N, x=d13C, fill=category), colour="black", pch=23, alpha=0.6, size=4)+
+ geom_point(data=fauna, aes(y=d15N, x=d13C, fill=category), colour="black", pch=23, alpha=0.6, size=3)+
   geom_text_repel(data=fauna, aes(y=d15N, x=d13C, label=common_name), size=2.1,
                   seed=1, max.overlaps=Inf, box.padding=0.25, point.padding=0.1,
                   force=3, force_pull=1.5, max.time=2, max.iter=1e5,
@@ -275,7 +275,7 @@ Fig2a
   scale_x_continuous(position="bottom", limits=c(0,20))+
   scale_y_continuous(position = "left",limits=c(0,40))+
   geom_point(data=fauna, aes(y=glu_d15N, x=phe_d15N, fill = category),
-  colour ="black", pch=23, alpha=0.6, size=4)+
+  colour ="black", pch=23, alpha=0.6, size=3)+
   geom_text_repel(data=fauna, aes(y=glu_d15N, x=phe_d15N, label=common_name), size=2.1,
                   seed=1, max.overlaps=Inf, box.padding=0.2, point.padding=0.1,
                   # force_pull raised relative to force so repel can't drag a label far
@@ -300,10 +300,10 @@ Fig2b
 
 ```{r}
 Fig2c <-ggplot() +
-  geom_point(data=fauna, aes(y=gluphe_15N,  x=valphe_13C, fill=category), colour="black", pch=23,alpha=0.6, size=4)+
+  geom_point(data=fauna, aes(y=gluphe_15N,  x=valphe_13C, fill=category), colour="black", pch=23,alpha=0.6, size=3)+
   geom_text_repel(data=fauna, aes(y=gluphe_15N, x=valphe_13C, label=common_name), size=2.1,
-                  seed=1, max.overlaps=Inf, box.padding=0.25, point.padding=0.1,
-                  force=3, force_pull=1.5, max.time=2, max.iter=1e5,
+                  seed=1, max.overlaps=Inf, box.padding=0.2, point.padding=0.05,
+                  force=3, force_pull=2.5, max.time=2, max.iter=1e5,
                   min.segment.length=Inf, segment.size=0.2)+  # never draw a leader line - just place the label near its point
   labs(y=expression(Delta^{15}*N[Glx-Phe]*"(‰)"), x=expression(Delta^{13}*C[Val-Phe]*"(‰)"))+
   scale_fill_manual(values=category_cols, breaks=names(category_cols))+
@@ -382,10 +382,10 @@ Make base plot for Fig2d/Fig3d.
 
 ```{r}
 Fig2d_base <-ggplot() +
-  geom_point(data=fauna, aes(y=lysphe_15N,  x=valphe_13C, fill=category), colour="black", pch=23,alpha=0.6, size=4)+
+  geom_point(data=fauna, aes(y=lysphe_15N,  x=valphe_13C, fill=category), colour="black", pch=23,alpha=0.6, size=3)+
   geom_text_repel(data=fauna, aes(y=lysphe_15N, x=valphe_13C, label=common_name), size=2.1,
-                  seed=1, max.overlaps=Inf, box.padding=0.25, point.padding=0.1,
-                  force=3, force_pull=1.5, max.time=2, max.iter=1e5,
+                  seed=1, max.overlaps=Inf, box.padding=0.2, point.padding=0.05,
+                  force=3, force_pull=2.5, max.time=2, max.iter=1e5,
                   min.segment.length=Inf, segment.size=0.2)+  # never draw a leader line - just place the label near its point
   labs(y=expression(Delta^{15}*N[Lys-Phe]*"(‰)"), x=expression(Delta^{13}*C[Val-Phe]*"(‰)"))+
    scale_fill_manual(values=category_cols, breaks=names(category_cols))+
@@ -465,11 +465,9 @@ Fig3a <-ggplot()+
   labs(y=expression(delta^{15}*N[collagen]*"(‰)"), x=expression(delta^{13}*C[collagen]*"(‰)"))+
   scale_x_continuous(position="bottom", limits=c(-25,-5))+
   scale_y_continuous(position = "left", limits=c(0,20))+
-  geom_point(data=fauna, aes(y=d15N, x=d13C, colour=category), alpha=0.8, pch=23, size=4)+
-  geom_point(data=humans, aes(y=d15N, x=d13C, fill=Site), colour="black", pch=21, size=4)+
-   scale_fill_manual(values=combined_cols, breaks=combined_order)+
-  scale_colour_manual(values=combined_cols, breaks=combined_order)+
-  guides(colour = "none")+  # keep only the Site (fill) legend, drop the fauna-category (colour) one
+  geom_point(data=fauna, aes(y=d15N, x=d13C, fill=category), colour="black", alpha=0.5, pch=23, size=3)+
+  geom_point(data=humans, aes(y=d15N, x=d13C, fill=Site), colour="black", pch=21, size=3)+
+   scale_fill_manual(values=combined_cols, breaks=combined_order, labels=combined_labels, name=NULL)+
   theme_bw() + theme(panel.grid = element_blank())+
   coord_fixed(ratio = 1)
 Fig3a
@@ -482,17 +480,15 @@ Fig3a
   labs(x=expression(delta^{15}*N[Phe]*"(‰)"), y=expression(delta^{15}*N[Glx]*"(‰)"))+
   scale_x_continuous(position="bottom", limits=c(0,20))+
   scale_y_continuous(position = "left",limits=c(0,40))+
-  geom_point(data=fauna, aes(y=glu_d15N, x=phe_d15N, colour=category), alpha=0.8, pch=23, size=4)+
-  geom_point(data=humans, aes(y=glu_d15N, x=phe_d15N, fill = Site), colour ="black", pch=21, size=3.5)+
+  geom_point(data=fauna, aes(y=glu_d15N, x=phe_d15N, fill=category), colour="black", alpha=0.5, pch=23, size=3)+
+  geom_point(data=humans, aes(y=glu_d15N, x=phe_d15N, fill = Site), colour ="black", pch=21, size=2.6)+
   annotate("text", label = "T1", x = 7 , y = 0, size = 3, colour = "black",angle = 25)+
   annotate("text", label = "T2", x = 0 , y = 0, size = 3, colour = "black",angle = 25)+
   annotate("text", label = "T3", x = 0 , y = 6, size = 3, colour = "black",angle = 25)+
   annotate("text", label = "M2", x = 0 , y = 10.2, size = 3, colour = "Blue",angle = 25)+
   annotate("text", label = "M3", x = 0 , y = 17.3, size = 3, colour = "Blue",angle = 25)+
   annotate("text", label = "M4", x = 0 , y = 24.5, size = 3, colour = "Blue",angle = 25)+
-  scale_fill_manual(values=combined_cols, breaks=combined_order)+
-  scale_colour_manual(values=combined_cols, breaks=combined_order)+
-  guides(fill=guide_legend(title="Samples"), colour = "none")+  # keep only the Site (fill) legend
+  scale_fill_manual(values=combined_cols, breaks=combined_order, labels=combined_labels, name=NULL)+
   geom_abline(intercept=c(-6.6, 1, 8.6, 10.9, 18.5, 26.1), slope= 1, linetype="dashed", linewidth=0.2)+#Ramirez et al. values
   theme_bw() + theme(panel.grid = element_blank())+
 coord_fixed(ratio = 0.5)
@@ -503,12 +499,10 @@ Fig3b
 
 ```{r}
 Fig3c <-ggplot() +
-  geom_point(data=fauna, aes(y=gluphe_15N,  x=valphe_13C, colour=category), alpha=0.8, pch=23, size=4)+
-  geom_point(data=humans, aes(y=gluphe_15N,  x=valphe_13C, fill=Site), colour="black", pch=21, size=4)+
+  geom_point(data=fauna, aes(y=gluphe_15N,  x=valphe_13C, fill=category), colour="black", alpha=0.5, pch=23, size=3)+
+  geom_point(data=humans, aes(y=gluphe_15N,  x=valphe_13C, fill=Site), colour="black", pch=21, size=3)+
   labs(y=expression(Delta^{15}*N[Glx-Phe]*"(‰)"), x=expression(Delta^{13}*C[Val-Phe]*"(‰)"))+
-  scale_fill_manual(values=combined_cols, breaks=combined_order)+
-  scale_colour_manual(values=combined_cols, breaks=combined_order)+
-  guides(colour = "none")+  # keep only the Site (fill) legend
+  scale_fill_manual(values=combined_cols, breaks=combined_order, labels=combined_labels, name=NULL)+
   scale_x_continuous(position="bottom", limits=c(-5,8))+
   scale_y_continuous(position = "left",limits=c(-5,30))+
   theme_bw() + theme(panel.grid = element_blank())+
@@ -520,11 +514,10 @@ Fig3c
 
 ```{r}
 Fig3d <-ggplot() +
-  geom_point(data=fauna, aes(y=lysphe_15N,  x=valphe_13C, colour=category), alpha=0.8, pch=23, size=4)+
-  geom_point(data=humans, aes(y=lysphe_15N,  x=valphe_13C, fill=Site), colour="black", pch=21, size=4)+
+  geom_point(data=fauna, aes(y=lysphe_15N,  x=valphe_13C, fill=category), colour="black", alpha=0.5, pch=23, size=3)+
+  geom_point(data=humans, aes(y=lysphe_15N,  x=valphe_13C, fill=Site), colour="black", pch=21, size=3)+
   labs(y=expression(Delta^{15}*N[Lys-Phe]*"(‰)"), x=expression(Delta^{13}*C[Val-Phe]*"(‰)"))+
- scale_fill_manual(values=combined_cols, breaks=combined_order)+
-  scale_colour_manual(values=combined_cols, breaks=combined_order)+
+ scale_fill_manual(values=combined_cols, breaks=combined_order, labels=combined_labels, name=NULL)+
   scale_x_continuous(position="bottom", limits=c(-5,8))+
   scale_y_continuous(position = "left",limits=c(-10,5))+
   theme_bw() + theme(panel.grid = element_blank())+
