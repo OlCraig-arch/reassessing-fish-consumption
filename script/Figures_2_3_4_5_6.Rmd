@@ -213,8 +213,8 @@ Fig1b <- ggplot(S2, aes(x = X_13Ccol, y = X_15Ncol, fill = Site)) +
   theme(
     legend.position = "inside", legend.position.inside = c(0.8, 0.18),
     legend.background = element_rect(fill = alpha("white", 0.85), colour = NA),
-    legend.title = element_text(size = 6), legend.text = element_text(size = 5),
-    legend.key.size = unit(0.26, "cm"),
+    legend.title = element_text(size = 9), legend.text = element_text(size = 8),
+    legend.key.size = unit(0.36, "cm"),
     plot.margin = margin(2, 2, 2, 2)
   )
 Fig1b
