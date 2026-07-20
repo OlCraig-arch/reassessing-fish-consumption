@@ -115,7 +115,7 @@ base_map <- ggplot() +
   geom_sf(data = brazil, fill = NA, colour = "black", linewidth = 0.08) +
   coord_sf(xlim = c(x_min, x_max), ylim = c(y_min, y_max), expand = FALSE) +
   scale_x_continuous(breaks = seq(-50, -43, 1)) +
-  scale_y_continuous(breaks = seq(-29, -23, 1))
+  scale_y_continuous(breaks = seq(-29, -24, 1))
 
 # Extracted from standalone copies so they can be inset onto the map
 # instead of taking space as an external legend column.
