@@ -222,6 +222,18 @@ Fig1b
 
 #5. Save Fig1 (A-B)
 
+**Manuscript caption:** Fig 1A: Map of study region, with the locations of
+Jabuticabeira II in Camacho-Jaguaruna-Laguna region, Morro do Ouro in
+Babitonga Bay, Moraes in Ribera do Iguape Valley and Piaçaguera in the
+Santos Coastal Plain. Map produced in R (v.3.6.0+), with topographic data
+derived from the Shuttle Radar Topography Mission (SRTM) global digital
+elevation model, accessed through the geodata package. Bathymetric data
+were extracted from NOAA's ETOPO global relief model through the marmap
+package. All geographic layers are openly available and were accessed in
+June 2026. Fig 1B: Overview of human individuals sub-sampled for compound
+specific isotope measurements based on available collagen δ13C and δ15N
+values by site. The selected samples are highlighted.
+
 Legends are inset within each panel (see above), so no external shared
 legend is needed. The width ratio (1.2:1) reflects Fig1a's wider true-scale
 aspect (7 x 6 degrees) versus Fig1b's near-square biplot.
@@ -442,6 +454,20 @@ Fig2d
 
 #11. Save Fig2 (A-D)
 
+**Manuscript caption:** Fig 2: Bulk and single compound isotope analysis of
+collagen extracted from faunal remains from archaeological sites in Brazil.
+A. Bulk collagen isotope analysis. B. δ15N values of glutamic acid (Glx)
+and phenylalanine (Phe) of collagen. These are compared with the trophic
+level estimates based on TDF and β values from terrestrial (vascular) and
+aquatic (non-vascular) autotrophs (Ramirez et al., 2021). C. Comparison of
+∆13CVal-Phe and ∆15NGlx-Phe of faunal samples. D. Comparison of source
+amino acid indices (∆13CVal-Phe and ∆15NLys-Phe) against the global ranges
+for marine (RA - red algae, GA - green algae, BA - brown algae, MA -
+macoralgae, Phyto - phytoplankton) and terrestrial primary producers
+(TP - terrestrial plants). The global ranges are shown on the axes. Faunal
+samples are shown by shaded diamonds (blue = brackish/marine, brown =
+terrestrial herbivore, pink = terrestrial omnivore).
+
 ```{r}
 library(ggpubr)
 # Rows arranged separately so Fig2d's cell gets the extra width/height
@@ -530,6 +556,20 @@ Fig3d
 ```
 
 #16. Save Fig3 (A-D)
+
+**Manuscript caption:** Fig 3. Bulk and single compound isotope analysis of
+collagen extracted from human remains from sambaquis against faunal
+samples. A. Bulk collagen isotope analysis. B. δ15N values of glutamic
+acid (Glx) and phenylalanine (Phe) of collagen. These are compared with
+the trophic level estimates based on TDF and β values from terrestrial
+(vascular) and aquatic (non-vascular) autotrophs (Ramirez et al., 2021).
+C. Comparison of ∆13CVal-Phe and ∆15NGlx-Phe. D. Comparison of source
+amino acid indices (∆13CVal-Phe and ∆15NLys-Phe) against the global ranges
+for marine (RA - red algae, GA - green algae, BA - brown algae, MA -
+Macroalgae, Phyto - phytoplankton) and terrestrial primary producers
+(TP - terrestrial plants). The global ranges are shown on the axes. Faunal
+samples are shown as diamonds (blue = brackish/marine, brown = terrestrial
+herbivore, pink = terrestrial omnivore).
 
 ```{r}
 library(ggpubr)
@@ -804,6 +844,15 @@ Fig4c
 
 #24. Save Fig4 (A-C)
 
+**Manuscript caption:** Fig 4. Percentage contribution of marine versus
+terrestrial source amino acids to sambaquis human collagen estimated from
+a MixSIAR Bayesian mixing model. The estimates are plotted against A. Bulk
+carbon isotope stable values, B. Bulk nitrogen stable isotope values and
+C. Estimated trophic position (TP) based on a mixed marine/terrestrial
+βGlx-Phe values. Error bars include fully propagated uncertainties and are
+one standard deviation. Also shown (red dashed lines) are the global range
+of modern human TPs (Bonhommeau et al., 2013).
+
 ```{r}
 library(ggpubr)
 Fig4 <- ggarrange (ggarrange(Fig4a, Fig4b, ncol=2, labels = c("A","B"), common.legend = TRUE, legend="none" ), Fig4c, labels = c("", "C"), nrow=2, legend="bottom", common.legend = TRUE)
@@ -845,6 +894,12 @@ Fig5b
 ```
 
 #27. Save Fig5 (A-B)
+
+**Manuscript caption:** Fig 5. Estimated marine vs. A) terrestrial
+consumption B) and trophic position (TP) against sulfur isotope (δ34S)
+values from sambaquis human collagen. Error bars include propagated
+uncertainties and are one standard deviation. Estimated trophic position
+(TP) based on a mixed marine/terrestrial βGlx-Phe values.
 
 ```{r}
 Fig5 <- ggarrange(Fig5a, Fig5b, labels = c("A", "B"), ncol = 2, common.legend = TRUE, legend = "bottom")
@@ -946,6 +1001,10 @@ Fig6c
 ```
 
 #29. Save Fig6 (A-C)
+
+**Manuscript caption:** Fig 6: The glycine problem. δ15N values of glycine
+plotted against A) phenylalanine, B) bulk collagen and C) glutamic acid
+showing different relationships between terrestrial and marine fauna.
 
 ```{r}
 Fig6_legend <- cowplot::get_legend(Fig6c)

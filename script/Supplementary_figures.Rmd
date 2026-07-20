@@ -94,6 +94,11 @@ S1D
 
 Save Supplementary Figure 1
 
+**Manuscript caption:** Supplementary Fig 1: Quality control indicators
+showing the relationship between hydroxyproline (Hyp) and proline (Pro)
+(A, B) and the estimated (EST) and observed (OBS) bulk isotope values for
+both isotopes (C, D).
+
 ```{r}
 FigS1 <- ggarrange(S1A, S1B, S1C, S1D,
                     labels = c("A", "B","C", "D"),
@@ -289,6 +294,10 @@ S2B
 ```
 
 Save Supplementary Figure 2
+
+**Manuscript caption:** Supplementary Fig 2: Principal components analysis
+of δ13C and δ15N values of amino acids from Sambaquis humans and fauna
+using raw values (A and B) and normalised (C and D).
 
 ```{r}
 S2 <- ggarrange(S2A, S2B, S2C, S2D,
