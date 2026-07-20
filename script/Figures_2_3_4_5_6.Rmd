@@ -257,10 +257,9 @@ Fig2a <-ggplot()+
   scale_x_continuous(position="bottom", limits=c(-25,-5))+
   scale_y_continuous(position = "left", limits=c(0,20))+
  geom_point(data=fauna, aes(y=d15N, x=d13C, fill=category), colour="black", pch=23, alpha=0.6, size=4)+
-  geom_label_repel(data=fauna, aes(y=d15N, x=d13C, label=common_name), size=2.1,
-                  fill="white", label.size=0.2, label.padding=unit(0.15,"lines"),
-                  seed=1, max.overlaps=Inf, box.padding=0.5, point.padding=0.3,
-                  force=3, force_pull=0.5, max.time=2, max.iter=1e5,
+  geom_text_repel(data=fauna, aes(y=d15N, x=d13C, label=common_name), size=2.1,
+                  seed=1, max.overlaps=Inf, box.padding=0.25, point.padding=0.1,
+                  force=3, force_pull=1.5, max.time=2, max.iter=1e5,
                   min.segment.length=Inf, segment.size=0.2)+  # never draw a leader line - just place the label near its point
   scale_fill_manual(values=category_cols, breaks=names(category_cols))+
     theme_bw() + theme(panel.grid = element_blank())+
@@ -277,12 +276,11 @@ Fig2a
   scale_y_continuous(position = "left",limits=c(0,40))+
   geom_point(data=fauna, aes(y=glu_d15N, x=phe_d15N, fill = category),
   colour ="black", pch=23, alpha=0.6, size=4)+
-  geom_label_repel(data=fauna, aes(y=glu_d15N, x=phe_d15N, label=common_name), size=2.1,
-                  fill="white", label.size=0.2, label.padding=unit(0.15,"lines"),
-                  seed=1, max.overlaps=Inf, box.padding=0.35, point.padding=0.3,
+  geom_text_repel(data=fauna, aes(y=glu_d15N, x=phe_d15N, label=common_name), size=2.1,
+                  seed=1, max.overlaps=Inf, box.padding=0.2, point.padding=0.1,
                   # force_pull raised relative to force so repel can't drag a label far
                   # from its point (e.g. "coati") just to dodge a neighbour.
-                  force=3, force_pull=2, max.time=2, max.iter=1e5,
+                  force=3, force_pull=2.5, max.time=2, max.iter=1e5,
                   min.segment.length=Inf, segment.size=0.2)+  # never draw a leader line - just place the label near its point
   annotate("text", label = "T1", x = 7 , y = 0, size = 3, colour = "black",angle = 25)+
   annotate("text", label = "T2", x = 0 , y = 0, size = 3, colour = "black",angle = 25)+
@@ -303,10 +301,9 @@ Fig2b
 ```{r}
 Fig2c <-ggplot() +
   geom_point(data=fauna, aes(y=gluphe_15N,  x=valphe_13C, fill=category), colour="black", pch=23,alpha=0.6, size=4)+
-  geom_label_repel(data=fauna, aes(y=gluphe_15N, x=valphe_13C, label=common_name), size=2.1,
-                  fill="white", label.size=0.2, label.padding=unit(0.15,"lines"),
-                  seed=1, max.overlaps=Inf, box.padding=0.5, point.padding=0.3,
-                  force=3, force_pull=0.5, max.time=2, max.iter=1e5,
+  geom_text_repel(data=fauna, aes(y=gluphe_15N, x=valphe_13C, label=common_name), size=2.1,
+                  seed=1, max.overlaps=Inf, box.padding=0.25, point.padding=0.1,
+                  force=3, force_pull=1.5, max.time=2, max.iter=1e5,
                   min.segment.length=Inf, segment.size=0.2)+  # never draw a leader line - just place the label near its point
   labs(y=expression(Delta^{15}*N[Glx-Phe]*"(‰)"), x=expression(Delta^{13}*C[Val-Phe]*"(‰)"))+
   scale_fill_manual(values=category_cols, breaks=names(category_cols))+
@@ -386,10 +383,9 @@ Make base plot for Fig2d/Fig3d.
 ```{r}
 Fig2d_base <-ggplot() +
   geom_point(data=fauna, aes(y=lysphe_15N,  x=valphe_13C, fill=category), colour="black", pch=23,alpha=0.6, size=4)+
-  geom_label_repel(data=fauna, aes(y=lysphe_15N, x=valphe_13C, label=common_name), size=2.1,
-                  fill="white", label.size=0.2, label.padding=unit(0.15,"lines"),
-                  seed=1, max.overlaps=Inf, box.padding=0.5, point.padding=0.3,
-                  force=3, force_pull=0.5, max.time=2, max.iter=1e5,
+  geom_text_repel(data=fauna, aes(y=lysphe_15N, x=valphe_13C, label=common_name), size=2.1,
+                  seed=1, max.overlaps=Inf, box.padding=0.25, point.padding=0.1,
+                  force=3, force_pull=1.5, max.time=2, max.iter=1e5,
                   min.segment.length=Inf, segment.size=0.2)+  # never draw a leader line - just place the label near its point
   labs(y=expression(Delta^{15}*N[Lys-Phe]*"(‰)"), x=expression(Delta^{13}*C[Val-Phe]*"(‰)"))+
    scale_fill_manual(values=category_cols, breaks=names(category_cols))+
