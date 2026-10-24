@@ -789,18 +789,6 @@ Fig4b
 
 #22. Derive trophic position from % marine mix (Ramirez et al. values)
 
-Derive the terrestrial beta value from herbivores, assuming they are TP2.
-
-```{r}
-T_herb <- Data %>%filter(category == "terrestrial_herbivore")
-T_herb <- T_herb %>%filter(!common_name == "guinea pig" & !common_name == "armadillo"& !common_name == "coati")
-T_herb <-  T_herb %>% rowwise() %>% mutate (beta = 7.6-(glu_d15N-phe_d15N) )
-beta_T = mean(T_herb$beta)
-sigma_beta_T = sd(T_herb$beta)
-beta_T
-sigma_beta_T
-```
-
 Calculate the uncertainties on trophic level estimates.
 
 ```{r}
@@ -846,12 +834,16 @@ Fig4c
 
 **Manuscript caption:** Fig 4. Percentage contribution of marine versus
 terrestrial source amino acids to sambaquis human collagen estimated from
-a MixSIAR Bayesian mixing model. The estimates are plotted against A. Bulk
-carbon isotope stable values, B. Bulk nitrogen stable isotope values and
-C. Estimated trophic position (TP) based on a mixed marine/terrestrial
-βGlx-Phe values. Error bars include fully propagated uncertainties and are
-one standard deviation. Also shown (red dashed lines) are the global range
-of modern human TPs (Bonhommeau et al., 2013).
+a MixSIAR Bayesian mixing model. The estimated % marine source amino acids
+is plotted against A. bulk collagen δ13C values, B. bulk collagen δ15N
+values and C. estimated trophic position (TP) based on mixed
+marine/terrestrial βGlx-Phe values. In A and B, points show the posterior
+median and horizontal bars the 90% credible interval. In C, points show the
+posterior mean, horizontal bars one standard deviation, and vertical bars
+one standard deviation of TP with fully propagated uncertainties (Glx and
+Phe measurement error, mixing proportion, βGlx-Phe endpoints and TDF). Red
+dashed lines show the global range of modern human TPs (Bonhommeau et al.,
+2013).
 
 ```{r}
 library(ggpubr)
@@ -895,11 +887,12 @@ Fig5b
 
 #27. Save Fig5 (A-B)
 
-**Manuscript caption:** Fig 5. Estimated marine vs. A) terrestrial
-consumption B) and trophic position (TP) against sulfur isotope (δ34S)
-values from sambaquis human collagen. Error bars include propagated
-uncertainties and are one standard deviation. Estimated trophic position
-(TP) based on a mixed marine/terrestrial βGlx-Phe values.
+**Manuscript caption:** Fig 5. Estimated A) % marine source amino acids
+and B) trophic position (TP) plotted against sulfur isotope (δ34S) values
+from sambaquis human collagen. In A, points show the posterior median and
+vertical bars the 90% credible interval. In B, TP is based on mixed
+marine/terrestrial βGlx-Phe values, and vertical bars show one standard
+deviation with fully propagated uncertainties.
 
 ```{r}
 Fig5 <- ggarrange(Fig5a, Fig5b, labels = c("A", "B"), ncol = 2, common.legend = TRUE, legend = "bottom")
