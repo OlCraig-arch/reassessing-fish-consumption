@@ -1,0 +1,54 @@
+cff-version: 1.2.0
+message: "If you use this code or data, please cite it using the metadata below, together with the associated article once published."
+title: "Code and data for: Reassessing prehistoric fish consumption in Southern Brazil through compound specific stable isotope analysis of amino acids"
+type: software
+abstract: "R code and data to reproduce the analyses and figures in the article, including bulk collagen and compound-specific amino acid isotope data (delta13C, delta15N, delta34S) for human and faunal samples from sambaquis in southern Brazil, the MixSIAR Bayesian mixing model, and trophic position estimates."
+keywords:
+  - Brazil
+  - shell mounds
+  - sambaquis
+  - stable isotopes
+  - compound specific
+  - amino acids
+repository-code: "https://github.com/OlCraig-arch/reassessing-fish-consumption"
+version: "1.0.0"
+# Fill in after the Zenodo release is published:
+# doi: "10.5281/zenodo.XXXXXXX"
+# date-released: "YYYY-MM-DD"
+# Licences: code is MIT (LICENSE); data and figures are CC-BY-4.0 (LICENSE-data).
+# Not set as a license field here because a CFF license list means "any of these".
+# Add ORCIDs as  orcid: "https://orcid.org/0000-0000-0000-0000"  under each author.
+authors:
+  - family-names: Craig
+    given-names: Oliver E.
+    affiliation: "BioArCh, Department of Archaeology, University of York, UK"
+  - family-names: Admiraal
+    given-names: Marjolein
+    affiliation: "BioArCh, Department of Archaeology, University of York, UK"
+  - family-names: Bones
+    given-names: Annie
+    affiliation: "BioArCh, Department of Archaeology, University of York, UK"
+  - family-names: McGrath
+    given-names: Krista
+    affiliation: "Department of Prehistory and Institute of Environmental Science and Technology (ICTA-UAB), Universitat Autònoma de Barcelona, Spain"
+  - family-names: Bandeira
+    given-names: Dione da Rocha
+    affiliation: "Laboratório de Arqueologia e Patrimônio Arqueológico, Universidade da Região de Joinville (UNIVILLE), Brazil"
+  - family-names: DeBlasis
+    given-names: Paulo Dantas
+    affiliation: "Museu de Arqueologia e Etnologia, Universidade de São Paulo (MAE/USP), Brazil"
+  - family-names: Figuti
+    given-names: Levy
+    affiliation: "Museu de Arqueologia e Etnologia, Universidade de São Paulo (MAE/USP), Brazil"
+  - family-names: Milheira
+    given-names: Rafael Guedes
+    affiliation: "Department of Anthropology and Archaeology, Federal University of Pelotas, Brazil"
+  - family-names: Sayle
+    given-names: Kerry L.
+    affiliation: "SUERC, University of Glasgow, UK"
+  - family-names: Talbot
+    given-names: Helen M.
+    affiliation: "BioArCh, Department of Archaeology, University of York, UK"
+  - family-names: Colonese
+    given-names: André C.
+    affiliation: "Department of Prehistory and Institute of Environmental Science and Technology (ICTA-UAB), Universitat Autònoma de Barcelona, Spain"
