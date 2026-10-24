@@ -18,12 +18,7 @@ Supplementary figures are produced separately in Supplementary_figures.Rmd.
 ```{r, echo=FALSE}
 library(dplyr)
 library(ggplot2)
-library(data.table)
-library(tidyr)
-library(stringr)
-library(Hmisc)
 library(ggpubr)
-library(googlesheets4)
 library(here)
 source(here('script','colors.R'))
 set.seed(1)  # reproducible geom_text_repel label placement
@@ -414,7 +409,6 @@ Fig2d_base
 Make the composite Fig2d/Fig3d "big D" plot (main panel + marginal densities).
 
 ```{r}
-library (ggExtra)
 library(ggpubr)
 library(cowplot)
 # axis_canvas() aligns xdens/ydens to Fig2d_base's coordinate system.
@@ -635,7 +629,6 @@ write.csv (Humans, here('mixingmodel','Humans.csv'), row.names=FALSE)
 Load source data and consumer data.
 
 ```{r}
-library(devtools)
 library(MixSIAR)
 
 #Load mixture data

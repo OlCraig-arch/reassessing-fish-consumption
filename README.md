@@ -24,7 +24,16 @@ The repository consists of four folders:
 
 ## Running the code
 
-Tested with R 4.5.1, JAGS 4.3.2 (required by MixSIAR) and MixSIAR 3.1.12 on macOS. Install JAGS and the R packages loaded at the top of each Rmd file.
+Tested with R 4.5.1, JAGS 4.3.2 (required by MixSIAR) and MixSIAR 3.1.12 on macOS. Install [JAGS](https://mcmc-jags.sourceforge.io/) first, then the R packages used by the scripts:
+
+```r
+install.packages(c("cowplot", "dplyr", "geodata", "ggnewscale", "ggplot2", "ggpubr",
+                   "ggrepel", "here", "janitor", "marmap", "MixSIAR", "png",
+                   "R2jags", "readxl", "rnaturalearth", "scales", "sf", "terra",
+                   "knitr", "rmarkdown"))
+# not on CRAN - high-resolution coastline data used for Fig 1A
+install.packages("rnaturalearthhires", repos = "https://ropensci.r-universe.dev")
+```
 
 1. Download or clone the repository and keep the folder structure intact. The scripts locate files with the `here` package, which uses the `.here` file in the repository root.
 2. Run `script/Supplementary_figures.Rmd` (a few seconds) and `script/Figures_2_3_4_5_6.Rmd`.

@@ -18,12 +18,7 @@ for the main manuscript figures.
 ```{r, echo=FALSE}
 library(dplyr)
 library(ggplot2)
-library(data.table)
-library(tidyr)
-library(stringr)
-library(Hmisc)
 library(ggpubr)
-library(googlesheets4)
 library(here)
 source(here('script','colors.R'))
 ```
